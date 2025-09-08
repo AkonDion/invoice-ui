@@ -29,8 +29,6 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
     script.async = true
     script.onload = () => {
-      console.log('HelcimPay script loaded successfully')
-      console.log('HelcimPay object:', window.appendHelcimPayIframe)
       setIsInitialized(true)
     }
     script.onerror = (error) => {
@@ -40,11 +38,11 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     document.head.appendChild(script)
 
     // Set up message listener for HelcimPay responses
+    const HELCIM_ORIGIN = 'https://secure.helcim.app'
+
     const handleMessage = (event: MessageEvent) => {
-      // Check if this is a HelcimPay response
-      if (event.data.eventName && event.data.eventName.startsWith('helcim-pay-js-')) {
-        const checkoutToken = event.data.eventName.replace('helcim-pay-js-', '')
-        
+      if (event.origin !== HELCIM_ORIGIN) return
+      if (event.data?.eventName && event.data.eventName.startsWith('helcim-pay-js-')) {
         if (event.data.eventStatus === 'ABORTED') {
           console.error('Transaction failed!', event.data.eventMessage)
           setError('Payment was cancelled or failed. Please try again.')
@@ -52,7 +50,6 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         }
 
         if (event.data.eventStatus === 'SUCCESS') {
-          console.log('Transaction success!', event.data.eventMessage)
           // Payment successful, reload the page to show updated status
           window.location.reload()
         }
@@ -102,7 +99,6 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       }
 
       // Call our API to initialize payment
-      console.log('Initializing payment for invoice:', invoice.invoiceNumber)
       const response = await fetch('/api/helcim/initialize', {
         method: 'POST',
         headers: {
@@ -124,11 +120,14 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         throw new Error(data.error || 'Failed to initialize payment')
       }
 
-      console.log('Payment initialized successfully:', data)
-
       // Initialize HelcimPay with the checkout token
       // The HelcimPay.js library will handle the modal display automatically
-      window.appendHelcimPayIframe(data.checkoutToken)
+      try {
+        window.appendHelcimPayIframe(data.checkoutToken)
+      } catch (iframeError) {
+        console.error('HelcimPay iframe error:', iframeError)
+        throw new Error('Unable to open payment modal. Please try again.')
+      }
 
     } catch (error) {
       console.error('Payment initialization error:', error)
