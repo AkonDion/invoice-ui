@@ -5,22 +5,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { invoice, customerInfo } = body;
     
-    console.log('HelcimPay initialization request:', { 
-      invoiceNumber: invoice?.invoiceNumber, 
-      amount: invoice?.amount, 
-      currency: invoice?.currency,
-      hasConvenienceFee: invoice?.hasConvenienceFee,
-      convenienceFeeEnabled: invoice?.convenienceFeeEnabled,
-      convenienceFee: invoice?.convenienceFee
-    });
-    console.log('Environment variables:', { 
-      hasApiToken: !!process.env.HELCIM_API_TOKEN, 
-      hasApiBase: !!process.env.HELCIM_API_BASE,
-      apiBase: process.env.HELCIM_API_BASE 
-    });
-    
     // Validate required fields
     if (!invoice || !invoice.amount || !invoice.currency) {
+      console.error('Missing invoice data in Helcim initialization request');
       return NextResponse.json(
         { error: 'Invoice data is required' },
         { status: 400 }
@@ -29,6 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Validate environment variables
     if (!process.env.HELCIM_API_TOKEN) {
+      console.error('Helcim API token not configured');
       return NextResponse.json(
         { error: 'Helcim API token not configured' },
         { status: 500 }
@@ -95,7 +83,6 @@ export async function POST(request: NextRequest) {
     requestBody.cancelUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${invoice.token}?payment=cancelled`;
 
     // Call Helcim API
-    console.log('Calling Helcim API with request body:', requestBody);
     const response = await fetch(`${process.env.HELCIM_API_BASE}/helcim-pay/initialize`, {
       method: 'POST',
       headers: {

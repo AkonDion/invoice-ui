@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 
 interface InvoicePageProps {
   params: { token: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 async function getInvoice(token: string): Promise<InvoicePayload> {
@@ -110,8 +111,9 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
   return invoice;
 }
 
-export default async function InvoicePage({ params }: InvoicePageProps) {
+export default async function InvoicePage({ params, searchParams }: InvoicePageProps) {
   const invoice = await getInvoice(params.token);
+  const paymentStatus = searchParams?.payment;
 
   return (
     <div className="min-h-screen overflow-hidden relative">
@@ -119,7 +121,23 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url(/Grid%202.png)" }}
       />
-      <div className="relative z-10 flex items-center justify-center min-h-screen py-8 px-4">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen py-8 px-4 space-y-4">
+        {paymentStatus === 'success' && (
+          <div
+            role="alert"
+            className="w-full max-w-md rounded bg-green-100 p-4 text-green-800"
+          >
+            Payment successful. Thank you!
+          </div>
+        )}
+        {paymentStatus === 'cancelled' && (
+          <div
+            role="alert"
+            className="w-full max-w-md rounded bg-yellow-100 p-4 text-yellow-800"
+          >
+            Payment cancelled.
+          </div>
+        )}
         <InvoiceCard invoice={invoice} />
       </div>
     </div>
