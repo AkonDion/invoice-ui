@@ -47,8 +47,6 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
     amountDue: invoiceData.amount_due,
     currency: invoiceData.currency,
     type: invoiceData.type,
-    convenienceFee: invoiceData.convenience_fee,
-    convenienceFeeEnabled: invoiceData.convenience_fee_enabled,
     hasConvenienceFee: invoiceData.has_convenience_fee,
     dateCreated: invoiceData.date_created,
     dateUpdated: invoiceData.date_updated,

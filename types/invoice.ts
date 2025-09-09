@@ -62,8 +62,6 @@ export type InvoicePayload = {
   amountDue: number
   currency: "CAD" | "USD"
   type: "INVOICE"
-  convenienceFee: number
-  convenienceFeeEnabled: boolean
   hasConvenienceFee: number
   orderFields: any[]
   billingAddress: InvoiceAddress
@@ -141,8 +139,6 @@ export const invoicePayloadSchema = z.object({
   amountDue: z.number(),
   currency: z.enum(["CAD", "USD"]),
   type: z.literal("INVOICE"),
-  convenienceFee: z.number(),
-  convenienceFeeEnabled: z.boolean(),
   hasConvenienceFee: z.number(),
   orderFields: z.array(z.any()),
   billingAddress: invoiceAddressSchema,
