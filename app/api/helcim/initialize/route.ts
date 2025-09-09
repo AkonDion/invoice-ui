@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { invoice, customerInfo } = body;
+    const { invoice } = body;
     
     // Validate required fields
     if (!invoice || !invoice.amount || !invoice.currency) {
@@ -23,47 +23,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare customer request if billing address is available
-    const customerRequest = customerInfo ? {
-      customerCode: `CUST_${invoice.customerId}`,
-      contactName: customerInfo.name || '',
-      businessName: customerInfo.businessName || '',
-      email: customerInfo.email || '',
-      phone: customerInfo.phone || '',
-      billingAddress: {
-        street1: customerInfo.street1 || '',
-        street2: customerInfo.street2 || '',
-        city: customerInfo.city || '',
-        province: customerInfo.province || '',
-        country: customerInfo.country || 'CA',
-        postalCode: customerInfo.postalCode || '',
-      }
-    } : undefined;
-
-    // Prepare invoice request
-    const invoiceRequest = {
-      invoiceNumber: invoice.invoiceNumber,
-      invoiceDate: invoice.dateIssued,
-      dueDate: invoice.dateIssued, // You might want to calculate this
-      currency: invoice.currency,
-      customerCode: `CUST_${invoice.customerId}`,
-      lineItems: (invoice.lineItems || []).map((item: any) => ({
-        description: item.description,
-        sku: item.sku,
-        quantity: item.quantity,
-        unitPrice: item.price,
-        totalPrice: item.total,
-        taxAmount: item.taxAmount,
-        discountAmount: item.discountAmount,
-      })),
-      subtotal: (invoice.lineItems || []).reduce((sum: number, item: any) => sum + item.total, 0),
-      taxAmount: invoice.tax?.amount || 0,
-      discountAmount: invoice.discounts?.amount || 0,
-      totalAmount: invoice.amount,
-    };
-
-    // Prepare the request body using actual invoice data
-    const requestBody: any = {
+    // Prepare the Helcim payment request
+    const requestBody: {
+      customStyling: {
+        appearance: string;
+        brandColor: string;
+        ctaButtonText: string;
+      };
+      paymentType: string;
+      amount: number;
+      currency: string;
+      customerCode: string;
+      invoiceNumber: string;
+      paymentMethod: string;
+      hasConvenienceFee: number;
+      confirmationScreen: boolean;
+      displayContactFields: number;
+      returnUrl?: string;
+      cancelUrl?: string;
+    } = {
       customStyling: {
         appearance: "dark",
         brandColor: process.env.HELCIM_BRAND_COLOR?.replace('#', '') || "00D6AF",
@@ -72,13 +50,12 @@ export async function POST(request: NextRequest) {
       paymentType: 'purchase',
       amount: invoice.amount,
       currency: invoice.currency,
-      customerCode: invoice.customerCode,
+      customerCode: `CST${invoice.customerId}`,
       invoiceNumber: invoice.invoiceNumber,
       paymentMethod: 'cc-ach',
-      hasConvenienceFee: typeof invoice.hasConvenienceFee === 'number' ? invoice.hasConvenienceFee : 0,
+      hasConvenienceFee: Number(invoice.hasConvenienceFee),
       confirmationScreen: true,
-      displayContactFields: 1,
-      taxAmount: invoice.tax?.amount || 0
+      displayContactFields: 1
     };
 
     // Add return URLs
