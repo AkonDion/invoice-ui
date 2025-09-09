@@ -79,11 +79,12 @@ export async function POST(request: NextRequest) {
       console.error('Helcim API Error:', {
         status: response.status,
         statusText: response.statusText,
-        data: data
+        requestBody,
+        responseData: data
       });
       return NextResponse.json(
-        { error: `Helcim API Error: ${response.status} - ${data.message || 'Unknown error'}` },
-        { status: 500 }
+        { error: `Helcim API Error: ${response.status} - ${data.error || data.message || 'Unknown error'}` },
+        { status: response.status }
       );
     }
 
