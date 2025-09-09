@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       paymentType: 'purchase',
       amount: invoice.amount,
       currency: invoice.currency,
-      customerCode: `CST${invoice.customerId}`,
+      customerCode: invoice.customerCode,
       invoiceNumber: invoice.invoiceNumber,
       paymentMethod: 'cc-ach',
       hasConvenienceFee: Number(invoice.hasConvenienceFee),
@@ -61,6 +61,11 @@ export async function POST(request: NextRequest) {
     // Add return URLs
     requestBody.returnUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${invoice.token}?payment=success`;
     requestBody.cancelUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${invoice.token}?payment=cancelled`;
+
+    console.log('Sending to Helcim:', {
+      url: `${process.env.HELCIM_API_BASE}/helcim-pay/initialize`,
+      payload: requestBody
+    });
 
     // Call Helcim API
     const response = await fetch(`${process.env.HELCIM_API_BASE}/helcim-pay/initialize`, {

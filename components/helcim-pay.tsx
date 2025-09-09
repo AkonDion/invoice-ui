@@ -116,7 +116,17 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       const data = await response.json()
 
       if (!response.ok) {
-        console.error('Payment initialization failed:', data)
+        console.error('Payment initialization failed:', {
+          status: response.status,
+          data,
+          sentPayload: {
+            invoice: {
+              ...invoice,
+              hasConvenienceFee: invoice.hasConvenienceFee,
+            },
+            customerInfo,
+          }
+        })
         throw new Error(data.error || 'Failed to initialize payment')
       }
 
