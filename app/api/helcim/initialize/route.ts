@@ -66,16 +66,19 @@ export async function POST(request: NextRequest) {
     const requestBody: any = {
       customStyling: {
         appearance: "dark",
-        brandColor: process.env.HELCIM_BRAND_COLOR?.replace('#', '') || "00D6AF"
+        brandColor: process.env.HELCIM_BRAND_COLOR?.replace('#', '') || "00D6AF",
+        ctaButtonText: "pay"
       },
       paymentType: 'purchase',
-      amount: invoice.amount, // Already in correct format
+      amount: invoice.amount,
       currency: invoice.currency,
       customerCode: invoice.customerCode,
       invoiceNumber: invoice.invoiceNumber,
       paymentMethod: 'cc-ach',
       hasConvenienceFee: typeof invoice.hasConvenienceFee === 'number' ? invoice.hasConvenienceFee : 0,
-      taxAmount: invoice.tax?.amount || 0, // Already in correct format
+      confirmationScreen: true,
+      displayContactFields: 1,
+      taxAmount: invoice.tax?.amount || 0
     };
 
     // Add return URLs
