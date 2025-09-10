@@ -16,9 +16,11 @@ export function InvoiceHeader({ invoice }: InvoiceHeaderProps) {
   const { showToast } = useToast()
 
   const downloadInvoice = () => {
-    // TODO: Implement invoice download functionality
-    console.log("Download invoice clicked")
-    showToast("Downloading invoice...")
+    if (!invoice.invoiceUrl) {
+      showToast("Invoice download URL not available")
+      return
+    }
+    window.open(invoice.invoiceUrl, '_blank')
   }
 
   return (

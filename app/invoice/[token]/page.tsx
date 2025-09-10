@@ -113,6 +113,7 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
       name: invoiceData.pickup_name,
       date: invoiceData.pickup_date,
     },
+    invoiceUrl: invoiceData.invoice_url,
   };
 
   // Log the transformed invoice object

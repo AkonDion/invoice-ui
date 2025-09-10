@@ -70,6 +70,7 @@ export type InvoicePayload = {
   pickup: InvoicePickup
   tax: InvoiceTax
   discounts: InvoiceDiscounts
+  invoiceUrl?: string
 }
 
 export type InvoicePageProps = {
@@ -147,6 +148,7 @@ export const invoicePayloadSchema = z.object({
   pickup: invoicePickupSchema,
   tax: invoiceTaxSchema,
   discounts: invoiceDiscountsSchema,
+  invoiceUrl: z.string().optional(),
 })
 
 export const invoicesArraySchema = z.array(invoicePayloadSchema).min(1)
