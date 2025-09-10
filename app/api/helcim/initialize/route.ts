@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
       customStyling: {
         appearance: "dark",
         brandColor: process.env.HELCIM_BRAND_COLOR?.replace('#', '') || "00D6AF",
-        ctaButtonText: "pay"
+        ctaButtonText: "pay",
+        showFeeSaver: true // Explicitly enable fee saver display
       },
       paymentType: 'purchase',
       amount: invoice.amount,
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       customerCode: invoice.customerCode,
       invoiceNumber: invoice.invoiceNumber,
       paymentMethod: 'cc-ach',
-      hasConvenienceFee: invoice.hasConvenienceFee ?? 0,
+      hasConvenienceFee: invoice.hasConvenienceFee ? 1 : 0, // Ensure it's exactly 1 or 0
       confirmationScreen: true,
       displayContactFields: 0
     };
