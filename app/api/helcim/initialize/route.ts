@@ -27,7 +27,9 @@ export async function POST(request: NextRequest) {
     console.log('Received invoice data:', {
       customerCode: invoice.customerCode,
       invoiceNumber: invoice.invoiceNumber,
-      amount: invoice.amount
+      amount: invoice.amount,
+      hasConvenienceFee: invoice.hasConvenienceFee,
+      rawHasConvenienceFee: typeof invoice.hasConvenienceFee === 'number' ? invoice.hasConvenienceFee : 0
     });
 
     // Prepare the Helcim payment request
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
       customerCode: invoice.customerCode,
       invoiceNumber: invoice.invoiceNumber,
       paymentMethod: 'cc-ach',
-      hasConvenienceFee: Number(invoice.hasConvenienceFee),
+      hasConvenienceFee: invoice.hasConvenienceFee ?? 0,
       confirmationScreen: true,
       displayContactFields: 0
     };

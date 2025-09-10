@@ -40,7 +40,8 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
     invoice_id: invoiceData.invoice_id,
     invoice_number: invoiceData.invoice_number,
     token: invoiceData.token,
-    customer_code: invoiceData.customer_code
+    customer_code: invoiceData.customer_code,
+    has_convenience_fee: invoiceData.has_convenience_fee
   });
 
   const invoice: InvoicePayload = {
@@ -55,7 +56,7 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
     amountDue: invoiceData.amount_due,
     currency: invoiceData.currency,
     type: invoiceData.type,
-    hasConvenienceFee: invoiceData.has_convenience_fee,
+    hasConvenienceFee: typeof invoiceData.has_convenience_fee === 'number' ? invoiceData.has_convenience_fee : Number(invoiceData.has_convenience_fee),
     dateCreated: invoiceData.date_created,
     dateUpdated: invoiceData.date_updated,
     dateIssued: invoiceData.date_issued,
@@ -118,7 +119,8 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
   console.log('Invoice transformed into InvoicePayload:', {
     token: invoice.token,
     customerCode: invoice.customerCode,
-    invoiceNumber: invoice.invoiceNumber
+    invoiceNumber: invoice.invoiceNumber,
+    hasConvenienceFee: invoice.hasConvenienceFee
   });
 
   return invoice;
