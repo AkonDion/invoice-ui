@@ -8,12 +8,12 @@ export default function HomePage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   return (
-    <div className="min-h-screen overflow-hidden relative">
+    <div className="min-h-[100dvh] overflow-x-hidden relative">
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url(/Grid%202.png)" }}
       />
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen py-8 px-4 space-y-6">
+      <div className="relative z-10 flex flex-col items-center min-h-[100dvh] py-8 px-4 space-y-6">
         {status === 'idle' && (
           <div className="w-full max-w-2xl mx-auto p-8 rounded-2xl bg-gradient-to-b from-white/20 to-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all duration-300">
             <div className="flex flex-col items-center space-y-6">

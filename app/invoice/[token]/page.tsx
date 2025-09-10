@@ -115,12 +115,12 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
   const paymentStatus = searchParams?.payment;
 
   return (
-    <div className="min-h-screen overflow-hidden relative">
+    <div className="min-h-[100dvh] overflow-x-hidden relative">
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url(/Grid%202.png)" }}
       />
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen py-8 px-4 space-y-4">
+      <div className="relative z-10 flex flex-col items-center min-h-[100dvh] px-4 pt-8 pb-24 md:pb-8 space-y-4">
         {paymentStatus === 'success' && (
           <div
             role="alert"
