@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
       displayContactFields: number;
       returnUrl?: string;
       cancelUrl?: string;
-      test: number;
       token: string;
     } = {
       customStyling: {
