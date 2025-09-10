@@ -89,4 +89,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  iframe[src*="helcim-pay"] {
+    margin-block: 5vh;
+    display: block;
+    margin-inline: auto;
+    max-height: 90vh;
+  }
 }

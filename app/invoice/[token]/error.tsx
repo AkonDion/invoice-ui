@@ -10,7 +10,7 @@ interface ErrorPageProps {
 
 export default function Error({ error, reset }: ErrorPageProps) {
   return (
-    <div className="min-h-screen relative pb-20 md:pb-0">
+    <div className="min-h-[100dvh] relative pb-20 md:pb-0">
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -20,7 +20,7 @@ export default function Error({ error, reset }: ErrorPageProps) {
       />
 
       {/* Error Card */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+      <div className="relative z-10 flex items-center min-h-[100dvh] p-4">
         <div className="w-full max-w-4xl mx-auto p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl">
           <div className="text-center space-y-6">
             <div className="flex justify-center">
