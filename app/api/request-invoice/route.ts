@@ -22,8 +22,6 @@ export async function POST(request: Request) {
       .order('date_created', { ascending: false })
       .limit(1);
 
-    console.log('Query result:', { email, invoices, error });
-    
     const invoice = invoices?.[0];
 
     if (error || !invoice) {

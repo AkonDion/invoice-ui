@@ -17,10 +17,6 @@ interface InvoiceCardProps {
 export function InvoiceCard({ invoice }: InvoiceCardProps) {
   const { toast } = useToast()
 
-  const handlePayNow = () => {
-    console.log("Pay Now clicked - would redirect to payment processor")
-  }
-
   return (
     <>
       <div className="w-full max-w-4xl mx-auto p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl">

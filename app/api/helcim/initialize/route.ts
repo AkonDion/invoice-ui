@@ -23,15 +23,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log the received invoice data
-    console.log('Received invoice data:', {
-      customerCode: invoice.customerCode,
-      invoiceNumber: invoice.invoiceNumber,
-      amount: invoice.amount,
-      hasConvenienceFee: invoice.hasConvenienceFee,
-      rawHasConvenienceFee: typeof invoice.hasConvenienceFee === 'number' ? invoice.hasConvenienceFee : 0
-    });
-
     // Prepare the Helcim payment request
     const requestBody: {
       customStyling: {
@@ -71,11 +62,6 @@ export async function POST(request: NextRequest) {
     requestBody.returnUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${invoice.token}?payment=success`;
     requestBody.cancelUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${invoice.token}?payment=cancelled`;
 
-    console.log('Sending to Helcim:', {
-      url: `${process.env.HELCIM_API_BASE}/helcim-pay/initialize`,
-      payload: requestBody
-    });
-
     // Call Helcim API
     const response = await fetch(`${process.env.HELCIM_API_BASE}/helcim-pay/initialize`, {
       method: 'POST',
@@ -90,12 +76,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('Helcim API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        requestBody,
-        responseData: data
-      });
+      console.error('Helcim API Error:', response.status, response.statusText, data.error || data.message);
       return NextResponse.json(
         { error: `Helcim API Error: ${response.status} - ${data.error || data.message || 'Unknown error'}` },
         { status: response.status }

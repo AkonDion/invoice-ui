@@ -98,13 +98,6 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         postalCode: invoice.billingAddress.postalCode || '',
       }
 
-      // Log the invoice data being sent
-      console.log('Sending invoice to Helcim initialize:', {
-        customerCode: invoice.customerCode,
-        invoiceNumber: invoice.invoiceNumber,
-        amount: invoice.amount
-      })
-
       // Call our API to initialize payment
       const response = await fetch('/api/helcim/initialize', {
         method: 'POST',
@@ -123,17 +116,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       const data = await response.json()
 
       if (!response.ok) {
-        console.error('Payment initialization failed:', {
-          status: response.status,
-          data,
-          sentPayload: {
-            invoice: {
-              ...invoice,
-              hasConvenienceFee: invoice.hasConvenienceFee,
-            },
-            customerInfo,
-          }
-        })
+        console.error('Payment initialization failed:', response.status, data.error || data.message)
         throw new Error(data.error || 'Failed to initialize payment')
       }
 
