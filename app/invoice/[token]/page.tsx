@@ -35,6 +35,14 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
     throw new Error("Unable to load invoice items");
   }
 
+  // Log the raw data from the database
+  console.log('Raw invoice data from database:', {
+    invoice_id: invoiceData.invoice_id,
+    invoice_number: invoiceData.invoice_number,
+    token: invoiceData.token,
+    customer_code: invoiceData.customer_code
+  });
+
   const invoice: InvoicePayload = {
     invoiceId: invoiceData.invoice_id,
     tipAmount: 0,
@@ -105,6 +113,13 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
       date: invoiceData.pickup_date,
     },
   };
+
+  // Log the transformed invoice object
+  console.log('Invoice transformed into InvoicePayload:', {
+    token: invoice.token,
+    customerCode: invoice.customerCode,
+    invoiceNumber: invoice.invoiceNumber
+  });
 
   return invoice;
 }

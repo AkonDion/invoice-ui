@@ -98,6 +98,13 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         postalCode: invoice.billingAddress.postalCode || '',
       }
 
+      // Log the invoice data being sent
+      console.log('Sending invoice to Helcim initialize:', {
+        customerCode: invoice.customerCode,
+        invoiceNumber: invoice.invoiceNumber,
+        amount: invoice.amount
+      })
+
       // Call our API to initialize payment
       const response = await fetch('/api/helcim/initialize', {
         method: 'POST',

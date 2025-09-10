@@ -23,6 +23,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Log the received invoice data
+    console.log('Received invoice data:', {
+      customerCode: invoice.customerCode,
+      invoiceNumber: invoice.invoiceNumber,
+      amount: invoice.amount
+    });
+
     // Prepare the Helcim payment request
     const requestBody: {
       customStyling: {
