@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
       displayContactFields: number;
       returnUrl?: string;
       cancelUrl?: string;
+      test: number;
+      token: string;
     } = {
       customStyling: {
         appearance: "dark",
@@ -51,7 +53,9 @@ export async function POST(request: NextRequest) {
       paymentMethod: 'cc-ach',
       hasConvenienceFee: invoice.hasConvenienceFee ? 1 : 0, // Ensure it's exactly 1 or 0
       confirmationScreen: true,
-      displayContactFields: 0
+      displayContactFields: 0,
+      test: 1,
+      token: "f2ecf0b621e9b04b9eea86"
     };
 
     // Add return URLs
