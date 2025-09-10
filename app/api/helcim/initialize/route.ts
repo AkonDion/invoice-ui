@@ -54,8 +54,7 @@ export async function POST(request: NextRequest) {
       customStyling: {
         appearance: "dark",
         brandColor: process.env.HELCIM_BRAND_COLOR?.replace('#', '') || "00D6AF",
-        ctaButtonText: "pay",
-        showFeeSaver: true // Explicitly enable fee saver display
+        ctaButtonText: "pay"
       },
       paymentType: 'purchase',
       amount: invoice.amount,
