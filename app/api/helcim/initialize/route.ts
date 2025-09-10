@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
       hasConvenienceFee: invoice.hasConvenienceFee ? 1 : 0, // Ensure it's exactly 1 or 0
       confirmationScreen: true,
       displayContactFields: 0,
-      test: 1,
       token: "f2ecf0b621e9b04b9eea86"
     };
 
