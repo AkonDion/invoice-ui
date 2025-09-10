@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       paymentMethod: 'cc-ach',
       hasConvenienceFee: Number(invoice.hasConvenienceFee),
       confirmationScreen: true,
-      displayContactFields: 1
+      displayContactFields: 0
     };
 
     // Add return URLs
