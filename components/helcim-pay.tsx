@@ -6,6 +6,7 @@ import { Loader2, CreditCard } from 'lucide-react'
 import { money } from '@/lib/invoice/adapter'
 import type { InvoicePayload } from '@/types/invoice'
 import { isPaid } from '@/types/invoice'
+import { PaymentConfirmationModal } from './payment-confirmation-modal'
 
 interface HelcimPayProps {
   invoice: InvoicePayload
@@ -23,6 +24,14 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<{ checkoutToken?: string; secretToken?: string }>({})
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [paymentResult, setPaymentResult] = useState<{
+    type: 'CREDIT_CARD' | 'ACH'
+    status: 'APPROVED' | 'DECLINED' | 'PENDING'
+    amount: string
+    currency: string
+    invoiceNumber: string
+  } | null>(null)
   
 
   // Load HelcimPay script and set up message listener
@@ -80,14 +89,31 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             })
             .then(result => {
               if (result.success) {
-                // Update any other values in your system
+                // Parse the payment response
+                const messageData = typeof event.data.eventMessage === 'string'
+                  ? JSON.parse(event.data.eventMessage)
+                  : event.data.eventMessage;
+                
+                const paymentData = messageData.data.data;
+                
+                // Set payment result for confirmation modal
+                setPaymentResult({
+                  type: 'bankToken' in paymentData ? 'ACH' : 'CREDIT_CARD',
+                  status: 'bankToken' in paymentData 
+                    ? 'PENDING' 
+                    : paymentData.status,
+                  amount: paymentData.amount,
+                  currency: paymentData.currency,
+                  invoiceNumber: paymentData.invoiceNumber
+                });
+                
+                // Show confirmation modal
+                setShowConfirmation(true);
+                
+                // Update system values in background
                 return updateSystemValues(event.data.eventMessage);
               }
               throw new Error('Payment validation failed');
-            })
-            .then(() => {
-              // Reload the page to show updated status
-              window.location.reload();
             })
             .catch(err => {
               console.error('Payment validation error:', err);
@@ -250,7 +276,20 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   }
 
   return (
-    <div className={`p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 ${className}`}>
+    <>
+      <PaymentConfirmationModal
+        isOpen={showConfirmation}
+        onClose={() => {
+          setShowConfirmation(false);
+          window.location.reload();
+        }}
+        paymentType={paymentResult?.type || 'CREDIT_CARD'}
+        status={paymentResult?.status || 'APPROVED'}
+        amount={paymentResult?.amount || '0'}
+        currency={paymentResult?.currency || 'CAD'}
+        invoiceNumber={paymentResult?.invoiceNumber || ''}
+      />
+      <div className={`p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 ${className}`}>
       <div className="flex items-center justify-between gap-4">
         <div>
           <div className="text-white/70 text-sm">Amount Due</div>
