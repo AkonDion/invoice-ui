@@ -40,7 +40,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     // Set up message listener for HelcimPay responses
     const HELCIM_ORIGIN = 'https://secure.helcim.app'
 
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       if (event.origin !== HELCIM_ORIGIN) return
       if (event.data?.eventName && event.data.eventName.startsWith('helcim-pay-js-')) {
         if (event.data.eventStatus === 'ABORTED') {
@@ -50,8 +50,66 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         }
 
         if (event.data.eventStatus === 'SUCCESS') {
-          // Payment successful, reload the page to show updated status
-          window.location.reload()
+          try {
+            // Following Helcim documentation structure for validation
+            const validateResponse = await validateResponse(event.data.eventMessage);
+            const validationResult = await validateResponse.json();
+            
+            if (!validateResponse.ok || !validationResult.success) {
+              throw new Error(validationResult.error || 'Payment validation failed');
+            }
+            
+            // Update any other values in your system
+            await updateSystemValues(event.data.eventMessage.data);
+            
+            // Reload the page to show updated status
+            window.location.reload();
+          } catch (error) {
+            console.error('Payment validation error:', error);
+            setError(error instanceof Error ? error.message : 'Payment validation failed');
+            setIsLoading(false);
+          }
+        }
+      }
+    }
+
+    // Helper function to validate the response as shown in Helcim docs
+    async function validateResponse(eventMessage: any) {
+      return fetch('/api/helcim/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rawDataResponse: eventMessage.data,
+          checkoutToken: checkoutToken, // Using the checkoutToken from parent scope
+          secretToken: eventMessage.secretToken,
+        }),
+      });
+    }
+
+    // Helper function to update other system values
+    async function updateSystemValues(paymentData: any) {
+      // Update invoice status
+      await fetch('/api/invoice/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          invoiceNumber: paymentData.invoiceNumber,
+          status: 'paid',
+          transactionId: paymentData.transactionId,
+        }),
+      });
+
+      // You can add more system updates here as needed
+    }
+          } catch (error) {
+            console.error('Payment validation error:', error);
+            setError(error instanceof Error ? error.message : 'Payment validation failed');
+            setIsLoading(false);
+          }
         }
       }
     }
