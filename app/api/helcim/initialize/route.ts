@@ -75,13 +75,54 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     
+    // Development logging
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🚀 Payment initialization request:', {
+        event: 'payment_initialization',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        request: {
+          amount: requestBody.amount,
+          currency: requestBody.currency,
+          customerCode: requestBody.customerCode,
+          invoiceNumber: requestBody.invoiceNumber,
+          paymentMethod: requestBody.paymentMethod,
+          hasConvenienceFee: requestBody.hasConvenienceFee
+        }
+      });
+    }
+    
     if (!response.ok) {
-      console.error('Helcim API Error:', response.status, response.statusText, data.error || data.message);
+      const errorLog = {
+        event: 'payment_initialization_error',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        error: {
+          status: response.status,
+          statusText: response.statusText,
+          message: data.error || data.message,
+          details: data
+        }
+      };
+      console.error('❌ Helcim API Error:', JSON.stringify(errorLog, null, 2));
       return NextResponse.json(
         { error: `Helcim API Error: ${response.status} - ${data.error || data.message || 'Unknown error'}` },
         { status: response.status }
       );
     }
+
+    // Log successful initialization
+    console.warn('✅ Payment initialized:', JSON.stringify({
+      event: 'payment_initialization_success',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      details: {
+        checkoutToken: data.checkoutToken,
+        amount: requestBody.amount,
+        currency: requestBody.currency,
+        invoiceNumber: requestBody.invoiceNumber
+      }
+    }, null, 2));
 
     return NextResponse.json({
       checkoutToken: data.checkoutToken,

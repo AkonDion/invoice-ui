@@ -45,14 +45,16 @@ interface HelcimACHResponse {
 }
 
 function validateHash(rawDataResponse: HelcimCCResponse | HelcimACHResponse, secretToken: string): string {
-  // 1. JSON encode the transaction response data
-  // Note: We sort the keys to ensure consistent ordering
-  const cleanedData = JSON.stringify(rawDataResponse, Object.keys(rawDataResponse).sort());
+  // 1. First JSON encode the raw data to ensure it's a string
+  const jsonString = JSON.stringify(rawDataResponse);
   
-  // 2. Append the secretToken
-  const dataWithSecret = cleanedData + secretToken;
+  // 2. Parse and re-encode to ensure consistent formatting (like PHP json_encode(json_decode()))
+  const cleanedJsonEncodedData = JSON.stringify(JSON.parse(jsonString));
   
-  // 3. Hash using SHA-256
+  // 3. Append the secretToken
+  const dataWithSecret = cleanedJsonEncodedData + secretToken;
+  
+  // 4. Generate SHA-256 hash
   return createHash('sha256')
     .update(dataWithSecret)
     .digest('hex');
@@ -64,63 +66,41 @@ async function storePaymentData(
   paymentType: 'CREDIT_CARD' | 'ACH'
 ) {
   try {
-    // First insert the base transaction
-    const { data: transaction, error: transactionError } = await supabase
+    const isCreditCard = paymentType === 'CREDIT_CARD';
+    const ccData = paymentData as HelcimCCResponse;
+    const achData = paymentData as HelcimACHResponse;
+
+    const { error: insertError } = await supabase
       .from('payment_transactions')
       .insert({
         transaction_id: paymentData.transactionId,
         date_created: paymentData.dateCreated,
+        payment_type: paymentType,
+        status: isCreditCard ? ccData.status : achData.statusAuth,
         amount: parseFloat(paymentData.amount),
         currency: paymentData.currency,
-        status: paymentType === 'CREDIT_CARD' 
-          ? (paymentData as HelcimCCResponse).status
-          : (paymentData as HelcimACHResponse).statusAuth,
-        payment_type: paymentType,
         customer_code: paymentData.customerCode,
-        invoice_number: paymentData.invoiceNumber
-      })
-      .select()
-      .single();
+        invoice_number: paymentData.invoiceNumber,
+        
+        // CC specific fields
+        card_token: isCreditCard ? ccData.cardToken : null,
+        card_last_four: isCreditCard ? ccData.cardNumber.slice(-4) : null,
+        card_holder_name: isCreditCard ? ccData.cardHolderName : null,
+        
+        // ACH specific fields
+        bank_token: !isCreditCard ? achData.bankToken : null,
+        bank_account_last_four: !isCreditCard ? achData.bankAccountNumber.slice(-4) : null,
+        
+        // Common fields
+        hash_validated: isHashValid,
+        response_data: paymentData // Store full response as JSON
+      });
 
-    if (transactionError) throw transactionError;
-
-    // Then insert the payment specific details
-    if (paymentType === 'CREDIT_CARD') {
-      const ccData = paymentData as HelcimCCResponse;
-      const { error: ccError } = await supabase
-        .from('credit_card_details')
-        .insert({
-          payment_transaction_id: transaction.id,
-          card_batch_id: ccData.cardBatchId,
-          avs_response: ccData.avsResponse,
-          cvv_response: ccData.cvvResponse,
-          approval_code: ccData.approvalCode,
-          card_token: ccData.cardToken,
-          card_number: ccData.cardNumber,
-          card_holder_name: ccData.cardHolderName,
-          warning: ccData.warning,
-          hash_validation: isHashValid
-        });
-
-      if (ccError) throw ccError;
-    } else {
-      const achData = paymentData as HelcimACHResponse;
-      const { error: achError } = await supabase
-        .from('ach_details')
-        .insert({
-          payment_transaction_id: transaction.id,
-          bank_token: achData.bankToken,
-          bank_account_number: achData.bankAccountNumber,
-          batch_id: achData.batchId,
-          status_auth: achData.statusAuth,
-          status_clearing: achData.statusClearing,
-          hash_validation: isHashValid
-        });
-
-      if (achError) throw achError;
+    if (insertError) {
+      console.error('Failed to store payment data:', insertError);
+      throw insertError;
     }
 
-    return transaction;
   } catch (error) {
     console.error('Error storing payment data:', error);
     throw error;
@@ -128,25 +108,43 @@ async function storePaymentData(
 }
 
 // Function to log transaction details to our application logs
-function logTransaction(data: HelcimCCResponse | HelcimACHResponse, validationResult: boolean) {
+function logTransaction(data: HelcimCCResponse | HelcimACHResponse, validationResult: boolean, hash?: string, calculatedHash?: string) {
   const isACH = 'bankToken' in data;
   const logData = {
+    event: 'payment_validation',
     timestamp: new Date().toISOString(),
-    transactionId: data.transactionId,
-    type: isACH ? 'ACH' : 'CREDIT_CARD',
-    amount: data.amount,
-    currency: data.currency,
-    status: isACH ? (data as HelcimACHResponse).statusAuth : (data as HelcimCCResponse).status,
-    validationResult,
-    customerCode: data.customerCode,
-    invoiceNumber: data.invoiceNumber
+    environment: process.env.NODE_ENV,
+    payment: {
+      transactionId: data.transactionId,
+      type: isACH ? 'ACH' : 'CREDIT_CARD',
+      amount: data.amount,
+      currency: data.currency,
+      status: isACH ? (data as HelcimACHResponse).statusAuth : (data as HelcimCCResponse).status,
+      customerCode: data.customerCode,
+      invoiceNumber: data.invoiceNumber,
+      lastFour: isACH 
+        ? (data as HelcimACHResponse).bankAccountNumber.slice(-4)
+        : (data as HelcimCCResponse).cardNumber.slice(-4)
+    },
+    validation: {
+      success: validationResult,
+      receivedHash: hash,
+      calculatedHash: calculatedHash,
+      hashMatch: hash === calculatedHash
+    }
   };
 
-  // Log to your application's logging system
+  // Development logging
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('🔍 Full payment response:', JSON.stringify(data, null, 2));
+    console.warn('📝 Validation details:', JSON.stringify(logData.validation, null, 2));
+  }
+
+  // Always log transaction result
   if (validationResult) {
-    console.warn('Transaction processed successfully:', JSON.stringify(logData, null, 2));
+    console.warn('✅ Transaction processed:', JSON.stringify(logData, null, 2));
   } else {
-    console.error('Transaction validation failed:', JSON.stringify(logData, null, 2));
+    console.error('❌ Transaction failed:', JSON.stringify(logData, null, 2));
   }
 }
 
@@ -189,8 +187,8 @@ export async function POST(request: NextRequest) {
     const helcimData = await helcimResponse.json();
     const isHashValid = calculatedHash === helcimData.hash;
 
-    // Log the transaction details
-    logTransaction(rawDataResponse, isHashValid);
+    // Log the transaction details with hash information
+    logTransaction(rawDataResponse, isHashValid, helcimData.hash, calculatedHash);
 
     // Store the payment data
     await storePaymentData(rawDataResponse, isHashValid, paymentType);

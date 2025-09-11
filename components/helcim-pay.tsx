@@ -22,6 +22,8 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<{ checkoutToken?: string; secretToken?: string }>({})
+  
 
   // Load HelcimPay script and set up message listener
   useEffect(() => {
@@ -40,56 +42,74 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     // Set up message listener for HelcimPay responses
     const HELCIM_ORIGIN = 'https://secure.helcim.app'
 
-    const handleMessage = async (event: MessageEvent) => {
-      if (event.origin !== HELCIM_ORIGIN) return
-      if (event.data?.eventName && event.data.eventName.startsWith('helcim-pay-js-')) {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== HELCIM_ORIGIN) return;
+
+      // Get checkoutToken from the data we received when initializing payment
+      const helcimPayJsIdentifierKey = 'helcim-pay-js-' + data.checkoutToken;
+
+      if (event.data.eventName === helcimPayJsIdentifierKey) {
         if (event.data.eventStatus === 'ABORTED') {
-          console.error('Transaction failed!', event.data.eventMessage)
-          setError('Payment was cancelled or failed. Please try again.')
-          setIsLoading(false)
+          console.error('Transaction failed!', event.data.eventMessage);
+          setError('Payment was cancelled or failed. Please try again.');
+          setIsLoading(false);
         }
 
         if (event.data.eventStatus === 'SUCCESS') {
-          try {
-            // Following Helcim documentation structure for validation
-            const validateResponse = await validateResponse(event.data.eventMessage);
-            const validationResult = await validateResponse.json();
-            
-            if (!validateResponse.ok || !validationResult.success) {
-              throw new Error(validationResult.error || 'Payment validation failed');
-            }
-            
-            // Update any other values in your system
-            await updateSystemValues(event.data.eventMessage.data);
-            
-            // Reload the page to show updated status
-            window.location.reload();
-          } catch (error) {
-            console.error('Payment validation error:', error);
-            setError(error instanceof Error ? error.message : 'Payment validation failed');
-            setIsLoading(false);
-          }
+          validateResponse(event.data.eventMessage)
+            .then(response => {
+              if (response.ok) {
+                return response.json();
+              }
+              throw new Error('Payment validation failed');
+            })
+            .then(result => {
+              if (result.success) {
+                // Update any other values in your system
+                return updateSystemValues(event.data.eventMessage);
+              }
+              throw new Error('Payment validation failed');
+            })
+            .then(() => {
+              // Reload the page to show updated status
+              window.location.reload();
+            })
+            .catch(err => {
+              console.error('Payment validation error:', err);
+              setError(err.message || 'Payment validation failed');
+              setIsLoading(false);
+            });
+        }
+
+        if (event.data.eventStatus === 'HIDE') {
+          console.log('Modal or confirmation screen closed.');
+          setIsLoading(false);
         }
       }
     }
 
     // Helper function to validate the response as shown in Helcim docs
-    async function validateResponse(eventMessage: any) {
+    function validateResponse(eventMessage: any) {
+      const payload = {
+        'rawDataResponse': eventMessage.data,
+        'checkoutToken': data.checkoutToken,
+        'secretToken': data.secretToken
+      };
+      
       return fetch('/api/helcim/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          rawDataResponse: eventMessage.data,
-          checkoutToken: checkoutToken, // Using the checkoutToken from parent scope
-          secretToken: eventMessage.secretToken,
-        }),
+        body: JSON.stringify(payload),
       });
     }
 
     // Helper function to update other system values
     async function updateSystemValues(paymentData: any) {
+      // Ensure we're using the data structure from Helcim's response
+      const data = paymentData.data || paymentData;
+      
       // Update invoice status
       await fetch('/api/invoice/update-status', {
         method: 'POST',
@@ -97,9 +117,9 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          invoiceNumber: paymentData.invoiceNumber,
+          invoiceNumber: data.invoiceNumber,
           status: 'paid',
-          transactionId: paymentData.transactionId,
+          transactionId: data.transactionId,
         }),
       });
 
@@ -163,17 +183,23 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         }),
       })
 
-      const data = await response.json()
+      const responseData = await response.json()
 
       if (!response.ok) {
-        console.error('Payment initialization failed:', response.status, data.error || data.message)
-        throw new Error(data.error || 'Failed to initialize payment')
+        console.error('Payment initialization failed:', response.status, responseData.error || responseData.message)
+        throw new Error(responseData.error || 'Failed to initialize payment')
       }
+
+      // Store the tokens for later use
+      setData({
+        checkoutToken: responseData.checkoutToken,
+        secretToken: responseData.secretToken
+      });
 
       // Initialize HelcimPay with the checkout token
       // The HelcimPay.js library will handle the modal display automatically
       try {
-        window.appendHelcimPayIframe(data.checkoutToken)
+        window.appendHelcimPayIframe(responseData.checkoutToken)
       } catch (iframeError) {
         console.error('HelcimPay iframe error:', iframeError)
         throw new Error('Unable to open payment modal. Please try again.')
