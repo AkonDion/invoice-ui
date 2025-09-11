@@ -31,30 +31,30 @@ export function PaymentConfirmationModal({
     switch (status) {
       case 'APPROVED':
         return {
-          icon: <CheckCircle2 className="h-16 w-16 text-white/90" aria-hidden="true" />,
+          icon: <CheckCircle2 className="h-16 w-16 text-green-400" aria-hidden="true" />,
           title: 'Payment Approved',
           description:
             paymentType === 'CREDIT_CARD'
               ? 'Your credit card payment has been processed successfully.'
               : 'Your ACH payment has been initiated successfully.',
-          glow: 'from-green-400/20',
+          glow: 'from-green-500/20',
         }
       case 'DECLINED':
         return {
-          icon: <XCircle className="h-16 w-16 text-white/90" aria-hidden="true" />,
+          icon: <XCircle className="h-16 w-16 text-red-400" aria-hidden="true" />,
           title: 'Payment Declined',
           description:
             'Your payment could not be processed. Please try again or use a different payment method.',
-          glow: 'from-red-400/20',
+          glow: 'from-red-500/20',
         }
       case 'PENDING':
       default:
         return {
-          icon: <Clock className="h-16 w-16 text-white/90" aria-hidden="true" />,
+          icon: <Clock className="h-16 w-16 text-blue-400" aria-hidden="true" />,
           title: 'Payment Pending',
           description:
             'Your ACH payment is being processed. This may take 3-5 business days to complete.',
-          glow: 'from-blue-400/20',
+          glow: 'from-blue-500/20',
         }
     }
   }, [status, paymentType])
@@ -129,10 +129,12 @@ export function PaymentConfirmationModal({
 
   const handleContainerClick = useCallback(
     (e: React.MouseEvent) => {
-      // Prevent clicks inside the dialog from closing it
-      e.stopPropagation()
+      // Only stop propagation if clicking inside the dialog content
+      if (e.target === e.currentTarget) {
+        onClose()
+      }
     },
-    []
+    [onClose]
   )
 
   const labelId = 'payment-confirmation-title'
@@ -149,7 +151,7 @@ export function PaymentConfirmationModal({
           exit={{ opacity: 0 }}
         >
           {/* Backdrop */}
-          <motion.div
+          <div
             className="absolute inset-0 bg-black/60 backdrop-blur-xl"
             onClick={onClose}
             aria-hidden="true"
@@ -170,14 +172,10 @@ export function PaymentConfirmationModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 12 }}
               transition={{ type: 'spring', duration: 0.35 }}
-              className={
-                'relative w-full max-w-md rounded-2xl border border-white/20 bg-gradient-to-b from-white/20 to-white/10 p-6 text-white shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl'
-              }
+              className="relative w-full max-w-md rounded-2xl bg-gradient-to-b from-white/20 to-white/10 backdrop-blur-md border border-white/20 p-6 text-white shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
             >
-              {/* Subtle colored glow ring */}
-              <div
-                className={`pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10`} />
-              <div className={`pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-b ${content.glow} to-transparent opacity-30`} />
+              {/* Status indicator */}
+              <div className={`absolute -inset-[1px] rounded-2xl bg-gradient-to-b ${content.glow} opacity-10`} />
 
               {/* Close button (top-right) */}
               <button
@@ -213,7 +211,7 @@ export function PaymentConfirmationModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-6 py-2 rounded-2xl bg-white/10 border border-white/20 text-white transition-all duration-200 hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                    className="px-6 py-2 bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 border border-white/20 rounded-xl text-white font-medium transition-all duration-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
                   >
                     Close
                   </button>
