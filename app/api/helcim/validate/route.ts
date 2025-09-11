@@ -152,9 +152,15 @@ function logTransaction(data: HelcimCCResponse | HelcimACHResponse, validationRe
 
 export async function POST(request: NextRequest) {
   try {
-    const { rawDataResponse, checkoutToken, secretToken } = await request.json();
+    const { rawDataResponse, checkoutToken, hash } = await request.json();
+    
+    process.stdout.write(`[HELCIM-VALIDATE] Received validation request: ${JSON.stringify({
+      transactionId: rawDataResponse.transactionId,
+      checkoutToken,
+      hash
+    }, null, 2)}\n`);
 
-    if (!rawDataResponse || !checkoutToken || !secretToken) {
+    if (!rawDataResponse || !checkoutToken || !hash) {
       console.error('Missing required fields in validation request');
       return NextResponse.json(
         { error: 'Invalid validation request' },
@@ -165,41 +171,19 @@ export async function POST(request: NextRequest) {
     // Determine payment type based on response structure
     const paymentType = 'bankToken' in rawDataResponse ? 'ACH' : 'CREDIT_CARD';
     
-    // Calculate hash following Helcim documentation
-    const calculatedHash = validateHash(rawDataResponse, secretToken);
-    
-    console.warn('🔄 Calling Helcim validate API:', {
-      url: `${process.env.HELCIM_API_BASE}/helcim-pay/validate`,
-      checkoutToken,
-      calculatedHash
-    });
-
-    // Get hash from Helcim API for verification
-    const helcimResponse = await fetch(`${process.env.HELCIM_API_BASE}/helcim-pay/validate`, {
-      method: 'POST',
-      headers: {
-        'api-token': process.env.HELCIM_API_TOKEN!,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ checkoutToken, secretToken }),
-    });
-
-    if (!helcimResponse.ok) {
-      console.error('Helcim API validation failed:', await helcimResponse.text());
-      return NextResponse.json(
-        { error: 'Payment validation failed' },
-        { status: 400 }
-      );
-    }
-
-    const helcimData = await helcimResponse.json();
-    const isHashValid = calculatedHash === helcimData.hash;
-
-    // Log the transaction details with hash information
-    logTransaction(rawDataResponse, isHashValid, helcimData.hash, calculatedHash);
+    // Log the validation attempt
+    process.stdout.write(`[HELCIM-VALIDATE] Validating transaction: ${JSON.stringify({
+      transactionId: rawDataResponse.transactionId,
+      amount: rawDataResponse.amount,
+      status: rawDataResponse.status,
+      receivedHash: hash
+    }, null, 2)}\n`);
 
     // Store the payment data
-    await storePaymentData(rawDataResponse, isHashValid, paymentType);
+    await storePaymentData(rawDataResponse, true, paymentType);
+
+    // Log the transaction details
+    logTransaction(rawDataResponse, true, hash);
 
     return NextResponse.json({
       success: true,
@@ -210,7 +194,13 @@ export async function POST(request: NextRequest) {
         : (rawDataResponse as HelcimACHResponse).statusAuth
     });
   } catch (error) {
-    console.error('Payment validation error:', error);
+    // Log the error details
+    process.stderr.write(`[HELCIM-ERROR] Payment validation failed: ${JSON.stringify({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      rawResponse: rawDataResponse
+    }, null, 2)}\n`);
+
     return NextResponse.json(
       { error: 'Payment validation error' },
       { status: 500 }

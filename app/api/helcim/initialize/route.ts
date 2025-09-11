@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     
     // Log initialization request to Railway
-    process.stdout.write(`[HELCIM-INIT] ${JSON.stringify({
+    process.stdout.write(`[HELCIM-INIT] Payment request: ${JSON.stringify({
       event: 'payment_initialization',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
@@ -87,6 +87,19 @@ export async function POST(request: NextRequest) {
         invoiceNumber: requestBody.invoiceNumber,
         paymentMethod: requestBody.paymentMethod,
         hasConvenienceFee: requestBody.hasConvenienceFee
+      }
+    }, null, 2)}\n`);
+
+    // Log successful initialization
+    process.stdout.write(`[HELCIM-INIT] ✅ Payment initialized: ${JSON.stringify({
+      event: 'payment_initialization_success',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      details: {
+        checkoutToken: data.checkoutToken,
+        amount: requestBody.amount,
+        currency: requestBody.currency,
+        invoiceNumber: requestBody.invoiceNumber
       }
     }, null, 2)}\n`);
     

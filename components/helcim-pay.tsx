@@ -64,7 +64,14 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         }
 
         if (event.data.eventStatus === 'SUCCESS') {
-          validateResponse(event.data.eventMessage)
+          // Parse the eventMessage if it's a string
+          const messageData = typeof event.data.eventMessage === 'string' 
+            ? JSON.parse(event.data.eventMessage) 
+            : event.data.eventMessage;
+
+          console.warn('📦 Parsed payment response:', messageData);
+
+          validateResponse(messageData)
             .then(response => {
               if (response.ok) {
                 return response.json();
@@ -97,11 +104,17 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
 
     // Helper function to validate the response as shown in Helcim docs
-    function validateResponse(eventMessage: any) {
+    function validateResponse(messageData: any) {
+      console.warn('🔐 Validating with:', {
+        data: messageData.data.data,
+        hash: messageData.data.hash,
+        checkoutToken: data.checkoutToken
+      });
+
       const payload = {
-        'rawDataResponse': eventMessage.data,
+        'rawDataResponse': messageData.data.data,
         'checkoutToken': data.checkoutToken,
-        'secretToken': data.secretToken
+        'hash': messageData.data.hash
       };
       
       return fetch('/api/helcim/validate', {
