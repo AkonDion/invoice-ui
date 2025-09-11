@@ -290,37 +290,38 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         invoiceNumber={paymentResult?.invoiceNumber || ''}
       />
       <div className={`p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 ${className}`}>
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="text-white/70 text-sm">Amount Due</div>
-          <div className="text-white font-bold text-lg">{money(invoice.amountDue, invoice.currency)}</div>
-          {error && (
-            <div className="text-red-300 text-xs mt-1">{error}</div>
-          )}
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="text-white/70 text-sm">Amount Due</div>
+            <div className="text-white font-bold text-lg">{money(invoice.amountDue, invoice.currency)}</div>
+            {error && (
+              <div className="text-red-300 text-xs mt-1">{error}</div>
+            )}
+          </div>
+          <Button
+            onClick={handlePayNow}
+            disabled={isLoading || !isInitialized}
+            className="bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white font-semibold px-6 py-3 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#00D6AF] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : !isInitialized ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <CreditCard className="w-4 h-4 mr-2" />
+                Pay Now
+              </>
+            )}
+          </Button>
         </div>
-        <Button
-          onClick={handlePayNow}
-          disabled={isLoading || !isInitialized}
-          className="bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white font-semibold px-6 py-3 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#00D6AF] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Processing...
-            </>
-          ) : !isInitialized ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Loading...
-            </>
-          ) : (
-            <>
-              <CreditCard className="w-4 h-4 mr-2" />
-              Pay Now
-            </>
-          )}
-        </Button>
       </div>
-    </div>
+    </>
   )
 }
