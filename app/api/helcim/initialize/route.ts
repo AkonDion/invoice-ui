@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
       paymentType: string;
       amount: number;
       currency: string;
+      customerCode: string;
+      invoiceNumber: string;
       paymentMethod: string;
       hasConvenienceFee: number;
       confirmationScreen: boolean;
@@ -48,6 +50,8 @@ export async function POST(request: NextRequest) {
       paymentType: 'purchase',
       amount: invoice.amount,
       currency: invoice.currency,
+      customerCode: invoice.customerCode,
+      invoiceNumber: invoice.invoiceNumber,
       paymentMethod: 'cc-ach',
       hasConvenienceFee: invoice.hasConvenienceFee ? 1 : 0, // Ensure it's exactly 1 or 0
       confirmationScreen: true,
