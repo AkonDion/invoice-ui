@@ -179,11 +179,16 @@ export async function POST(request: NextRequest) {
       receivedHash: hash
     }, null, 2)}\n`);
 
+    // Validate the hash
+    const secretToken = process.env.HELCIM_SECRET_TOKEN!;
+    const calculatedHash = validateHash(rawDataResponse, secretToken);
+    const isHashValid = hash === calculatedHash;
+
     // Store the payment data
-    await storePaymentData(rawDataResponse, true, paymentType);
+    await storePaymentData(rawDataResponse, isHashValid, paymentType);
 
     // Log the transaction details
-    logTransaction(rawDataResponse, true, hash);
+    logTransaction(rawDataResponse, isHashValid, hash, calculatedHash);
 
     return NextResponse.json({
       success: true,
@@ -198,7 +203,7 @@ export async function POST(request: NextRequest) {
     process.stderr.write(`[HELCIM-ERROR] Payment validation failed: ${JSON.stringify({
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      rawResponse: rawDataResponse
+      rawResponse: undefined
     }, null, 2)}\n`);
 
     return NextResponse.json(

@@ -70,7 +70,7 @@ export default function HomePage() {
                             setStatus('error');
                             setMessage('No invoice found for this email. Please contact us at billing@comforthub.ca for assistance.');
                           }
-                        } catch (error) {
+                        } catch {
                           setStatus('error');
                           setMessage('Something went wrong. Please try again later.');
                         }
