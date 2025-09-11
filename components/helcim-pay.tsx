@@ -105,14 +105,6 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
       // You can add more system updates here as needed
     }
-          } catch (error) {
-            console.error('Payment validation error:', error);
-            setError(error instanceof Error ? error.message : 'Payment validation failed');
-            setIsLoading(false);
-          }
-        }
-      }
-    }
 
     window.addEventListener('message', handleMessage)
 
