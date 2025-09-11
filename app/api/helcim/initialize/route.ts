@@ -75,25 +75,24 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     
-    // Development logging
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('🚀 Payment initialization request:', {
-        event: 'payment_initialization',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-        request: {
-          amount: requestBody.amount,
-          currency: requestBody.currency,
-          customerCode: requestBody.customerCode,
-          invoiceNumber: requestBody.invoiceNumber,
-          paymentMethod: requestBody.paymentMethod,
-          hasConvenienceFee: requestBody.hasConvenienceFee
-        }
-      });
-    }
+    // Log initialization request to Railway
+    process.stdout.write(`[HELCIM-INIT] ${JSON.stringify({
+      event: 'payment_initialization',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      request: {
+        amount: requestBody.amount,
+        currency: requestBody.currency,
+        customerCode: requestBody.customerCode,
+        invoiceNumber: requestBody.invoiceNumber,
+        paymentMethod: requestBody.paymentMethod,
+        hasConvenienceFee: requestBody.hasConvenienceFee
+      }
+    }, null, 2)}\n`);
     
     if (!response.ok) {
-      const errorLog = {
+      // Log error to Railway
+      process.stderr.write(`[HELCIM-ERROR] ${JSON.stringify({
         event: 'payment_initialization_error',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
@@ -103,8 +102,7 @@ export async function POST(request: NextRequest) {
           message: data.error || data.message,
           details: data
         }
-      };
-      console.error('❌ Helcim API Error:', JSON.stringify(errorLog, null, 2));
+      }, null, 2)}\n`);
       return NextResponse.json(
         { error: `Helcim API Error: ${response.status} - ${data.error || data.message || 'Unknown error'}` },
         { status: response.status }

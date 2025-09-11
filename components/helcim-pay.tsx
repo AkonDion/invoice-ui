@@ -27,6 +27,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
   // Load HelcimPay script and set up message listener
   useEffect(() => {
+    console.warn('Setting up Helcim with data:', data);
     const script = document.createElement('script')
     script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
     script.async = true
@@ -43,6 +44,13 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     const HELCIM_ORIGIN = 'https://secure.helcim.app'
 
     const handleMessage = (event: MessageEvent) => {
+      // Log the raw event data to see what we're getting
+      console.warn('🔍 Helcim Event:', {
+        origin: event.origin,
+        data: event.data,
+        expectedToken: data.checkoutToken
+      });
+
       if (event.origin !== HELCIM_ORIGIN) return;
 
       // Get checkoutToken from the data we received when initializing payment
@@ -82,7 +90,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         }
 
         if (event.data.eventStatus === 'HIDE') {
-          console.log('Modal or confirmation screen closed.');
+          console.warn('Modal or confirmation screen closed.');
           setIsLoading(false);
         }
       }
@@ -136,7 +144,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       }
       window.removeEventListener('message', handleMessage)
     }
-  }, [])
+  }, [data])
 
   const handlePayNow = async () => {
     if (!isInitialized) {
@@ -199,9 +207,10 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       // Initialize HelcimPay with the checkout token
       // The HelcimPay.js library will handle the modal display automatically
       try {
-        window.appendHelcimPayIframe(responseData.checkoutToken)
+        console.warn('🚀 Initializing Helcim iframe with token:', responseData.checkoutToken);
+        window.appendHelcimPayIframe(responseData.checkoutToken);
       } catch (iframeError) {
-        console.error('HelcimPay iframe error:', iframeError)
+        console.error('HelcimPay iframe error:', iframeError);
         throw new Error('Unable to open payment modal. Please try again.')
       }
 

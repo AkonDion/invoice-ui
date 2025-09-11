@@ -134,17 +134,19 @@ function logTransaction(data: HelcimCCResponse | HelcimACHResponse, validationRe
     }
   };
 
-  // Development logging
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('🔍 Full payment response:', JSON.stringify(data, null, 2));
-    console.warn('📝 Validation details:', JSON.stringify(logData.validation, null, 2));
-  }
+  // Always log the event for Railway logs
+  process.stdout.write(`[HELCIM-PAYMENT] ${JSON.stringify({
+    ...logData,
+    raw_response: process.env.NODE_ENV === 'development' ? data : undefined
+  }, null, 2)}\n`);
 
-  // Always log transaction result
-  if (validationResult) {
-    console.warn('✅ Transaction processed:', JSON.stringify(logData, null, 2));
-  } else {
-    console.error('❌ Transaction failed:', JSON.stringify(logData, null, 2));
+  // Log errors to stderr for Railway error tracking
+  if (!validationResult) {
+    process.stderr.write(`[HELCIM-ERROR] Payment validation failed: ${JSON.stringify({
+      transactionId: data.transactionId,
+      invoiceNumber: data.invoiceNumber,
+      validation: logData.validation
+    }, null, 2)}\n`);
   }
 }
 
@@ -166,6 +168,12 @@ export async function POST(request: NextRequest) {
     // Calculate hash following Helcim documentation
     const calculatedHash = validateHash(rawDataResponse, secretToken);
     
+    console.warn('🔄 Calling Helcim validate API:', {
+      url: `${process.env.HELCIM_API_BASE}/helcim-pay/validate`,
+      checkoutToken,
+      calculatedHash
+    });
+
     // Get hash from Helcim API for verification
     const helcimResponse = await fetch(`${process.env.HELCIM_API_BASE}/helcim-pay/validate`, {
       method: 'POST',
