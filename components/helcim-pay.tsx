@@ -23,8 +23,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentCheckoutToken, setCurrentCheckoutToken] = useState<string | null>(null)
-  const [currentSecretToken, setCurrentSecretToken] = useState<string | null>(null)
-  // Load HelcimPay script and set up message listener
+  // Load HelcimPay script
   useEffect(() => {
     const script = document.createElement('script')
     script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
@@ -38,14 +37,36 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
     document.head.appendChild(script)
 
-    // Set up message listener for HelcimPay responses
+    return () => {
+      // Cleanup script on unmount
+      const existingScript = document.querySelector('script[src="https://secure.helcim.app/helcim-pay/services/start.js"]')
+      if (existingScript) {
+        document.head.removeChild(existingScript)
+      }
+    }
+  }, [])
+
+  // Set up message listener that has access to current tokens
+  useEffect(() => {
     const HELCIM_ORIGIN = 'https://secure.helcim.app'
 
     const handleMessage = (event: MessageEvent) => {
+      // Log all Helcim events for debugging
+      console.warn('🔍 Received message event:', {
+        origin: event.origin,
+        eventName: event.data?.eventName,
+        eventStatus: event.data?.eventStatus,
+        expectedEventName: currentCheckoutToken ? `helcim-pay-js-${currentCheckoutToken}` : 'no token set',
+        currentCheckoutToken,
+        fullEventData: event.data
+      });
+
       if (event.origin !== HELCIM_ORIGIN) return
       
       // Check if this event is for our current checkout token
       if (currentCheckoutToken && event.data?.eventName === `helcim-pay-js-${currentCheckoutToken}`) {
+        console.warn('✅ Event matches our checkout token!')
+        
         if (event.data.eventStatus === 'ABORTED') {
           console.error('Transaction failed!', event.data.eventMessage)
           setError('Payment was cancelled or failed. Please try again.')
@@ -53,56 +74,71 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         }
 
         if (event.data.eventStatus === 'SUCCESS') {
-          if (!currentCheckoutToken || !currentSecretToken) {
-            console.error('Missing tokens for validation')
-            setError('Payment validation failed - missing tokens')
-            setIsLoading(false)
-            return
-          }
-          validateResponse(event.data.eventMessage, currentCheckoutToken, currentSecretToken)
+          console.warn('🎉 Payment SUCCESS detected!')
+          
+          // Parse the eventMessage if it's a string
+          const messageData = typeof event.data.eventMessage === 'string' 
+            ? JSON.parse(event.data.eventMessage) 
+            : event.data.eventMessage;
+
+          console.warn('📦 Parsed payment response:', messageData);
+          
+          console.warn('🔐 Starting validation...')
+          validateResponse(messageData, currentCheckoutToken)
             .then(response => {
+              console.warn('📡 Validation response:', response.status)
               if (response.ok) {
                 return response.json()
               }
               throw new Error('Payment validation failed')
             })
             .then(result => {
+              console.warn('✅ Validation result:', result)
               if (result.success) {
-                // Update system values
+                console.warn('💾 Updating system values...')
                 return updateSystemValues(event.data.eventMessage)
               }
               throw new Error('Payment validation failed')
             })
             .then(() => {
-              // Redirect to success page with payment status
+              console.warn('🚀 Redirecting to success page...')
               window.location.href = `/invoice/${invoice.token}?payment=success`
             })
             .catch(err => {
-              console.error('Payment validation error:', err)
+              console.error('❌ Payment validation error:', err)
               setError(err.message || 'Payment validation failed')
               setIsLoading(false)
             })
         }
 
         if (event.data.eventStatus === 'HIDE') {
+          console.warn('👋 Modal closed')
           setIsLoading(false)
         }
       }
       
-      // Fallback for older event format (just in case)
+      // Fallback for any helcim event (for debugging)
       else if (event.data?.eventName && event.data.eventName.startsWith('helcim-pay-js-')) {
+        console.warn('⚠️ Received helcim event but token mismatch - using fallback')
         if (event.data.eventStatus === 'SUCCESS') {
+          console.warn('🔄 Using fallback reload for success')
           window.location.reload()
         }
       }
     }
 
-    // Helper function to validate the response - following official Helcim documentation
-    function validateResponse(eventMessage: { data: unknown; hash: string }, checkoutToken: string, secretToken: string) {
+    // Helper function to validate the response - using original working format
+    function validateResponse(messageData: { data: { data: unknown; hash: string } }, checkoutToken: string) {
+      console.warn('🔐 Validating response with payload:', {
+        hasData: !!messageData.data?.data,
+        hasHash: !!messageData.data?.hash,
+        checkoutToken: checkoutToken?.substring(0, 8) + '...'
+      })
+      
       const payload = {
-        'rawDataResponse': eventMessage.data,
+        'rawDataResponse': messageData.data.data,
         'checkoutToken': checkoutToken,
-        'secretToken': secretToken
+        'hash': messageData.data.hash
       }
       
       return fetch('/api/helcim/validate', {
@@ -114,22 +150,49 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       })
     }
 
-    // Helper function to update other system values
-    async function updateSystemValues(paymentData: { data?: { invoiceNumber?: string; transactionId?: string } }) {
-      const data = paymentData.data || paymentData as { invoiceNumber?: string; transactionId?: string }
+    // Helper function to update other system values - using original working format
+    async function updateSystemValues(paymentData: unknown) {
+      console.warn('💾 Updating system values with:', paymentData)
+      
+      // Parse the payment data structure
+      const messageData = typeof paymentData === 'string' ? JSON.parse(paymentData) : paymentData;
+      const messageObj = messageData as { data?: { data?: unknown } };
+      const transactionData = messageObj.data?.data || messageObj.data || messageData;
+      
+      console.warn('📊 Transaction data:', transactionData)
+      
+      // Type guard for transaction data
+      const transaction = transactionData as { invoiceNumber?: string; transactionId?: string };
       
       // Update invoice status if we have the required data
-      if (data.invoiceNumber && data.transactionId) {
-        await fetch('/api/invoice/update-status', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            invoiceNumber: data.invoiceNumber,
-            status: 'paid',
-            transactionId: data.transactionId,
-          }),
+      if (transaction.invoiceNumber && transaction.transactionId) {
+        console.warn('📝 Updating invoice status for:', transaction.invoiceNumber)
+        try {
+          const response = await fetch('/api/invoice/update-status', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              invoiceNumber: transaction.invoiceNumber,
+              status: 'paid',
+              transactionId: transaction.transactionId,
+            }),
+          })
+          
+          if (response.ok) {
+            console.warn('✅ Invoice status updated successfully')
+          } else {
+            console.error('❌ Failed to update invoice status:', await response.text())
+          }
+        } catch (error) {
+          console.error('❌ Error updating invoice status:', error)
+        }
+      } else {
+        console.warn('⚠️ Missing invoice data for system update:', {
+          invoiceNumber: transaction.invoiceNumber,
+          transactionId: transaction.transactionId,
+          availableKeys: transactionData && typeof transactionData === 'object' ? Object.keys(transactionData) : []
         })
       }
     }
@@ -137,14 +200,9 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     window.addEventListener('message', handleMessage)
 
     return () => {
-      // Cleanup script and event listener on unmount
-      const existingScript = document.querySelector('script[src="https://secure.helcim.app/helcim-pay/services/start.js"]')
-      if (existingScript) {
-        document.head.removeChild(existingScript)
-      }
       window.removeEventListener('message', handleMessage)
     }
-  }, [])
+  }, [currentCheckoutToken, invoice.token])
 
   const handlePayNow = async () => {
     if (!isInitialized) {
@@ -198,9 +256,8 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         throw new Error(data.error || 'Failed to initialize payment')
       }
 
-      // Store both tokens for message handling and validation
+      // Store checkout token for message handling
       setCurrentCheckoutToken(data.checkoutToken)
-      setCurrentSecretToken(data.secretToken)
 
       // Initialize HelcimPay with the checkout token
       // The HelcimPay.js library will handle the modal display automatically
