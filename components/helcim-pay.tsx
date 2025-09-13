@@ -29,18 +29,6 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   useEffect(() => {
     console.warn('Setting up Helcim with data:', data);
     
-    // Create a container for the Helcim iframe
-    const helcimContainer = document.createElement('div');
-    helcimContainer.id = 'helcim-container';
-    helcimContainer.style.position = 'fixed';
-    helcimContainer.style.top = '0';
-    helcimContainer.style.left = '0';
-    helcimContainer.style.width = '100%';
-    helcimContainer.style.height = '100%';
-    helcimContainer.style.zIndex = '9999';
-    helcimContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
-    document.body.appendChild(helcimContainer);
-    
     const script = document.createElement('script')
     script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
     script.async = true
@@ -169,10 +157,10 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         document.head.removeChild(existingScript)
       }
       
-      // Remove the Helcim container
-      const container = document.getElementById('helcim-container')
-      if (container) {
-        document.body.removeChild(container)
+      // Remove the Helcim iframe using their native function
+      const frame = document.getElementById('helcimPayIframe');
+      if (frame instanceof HTMLIFrameElement) {
+        frame.remove();
       }
       
       window.removeEventListener('message', handleMessage)
@@ -238,15 +226,10 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       });
 
       // Initialize HelcimPay with the checkout token
-      // The HelcimPay.js library will handle the modal display automatically
+      // Let Helcim's native implementation handle the modal display
       try {
         console.warn('🚀 Initializing Helcim iframe with token:', responseData.checkoutToken);
-        // First, make sure the container is ready
-        const container = document.getElementById('helcim-container');
-        if (!container) {
-          throw new Error('Helcim container not found');
-        }
-        // Then initialize the iframe
+        // Use native appendHelcimPayIframe with default allowExit behavior
         window.appendHelcimPayIframe(responseData.checkoutToken);
       } catch (iframeError) {
         console.error('HelcimPay iframe error:', iframeError);
