@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
         invoice_number: rawDataResponse.invoiceNumber,
         card_token: isCreditCard ? (rawDataResponse as HelcimCCResponse).cardToken ?? null : null,
         card_last_four: isCreditCard ? ((rawDataResponse as HelcimCCResponse).cardNumber ?? '').slice(-4) : null,
+        card_holder_name: isCreditCard ? (rawDataResponse as HelcimCCResponse).cardHolderName ?? null : null,
         bank_token: !isCreditCard ? (rawDataResponse as HelcimACHResponse).bankToken : null,
         bank_account_last_four: !isCreditCard ? (rawDataResponse as HelcimACHResponse).bankAccountNumber.slice(-4) : null,
         hash_validated: isValid,
