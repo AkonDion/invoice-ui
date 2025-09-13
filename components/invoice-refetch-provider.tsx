@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import type { InvoicePayload } from '@/types/invoice'
 
 interface InvoiceRefetchContextType {
@@ -16,24 +15,27 @@ interface InvoiceRefetchProviderProps {
   children: React.ReactNode
   initialInvoice: InvoicePayload
   token: string
+  supabaseUrl: string
+  supabaseAnonKey: string
 }
 
 export function InvoiceRefetchProvider({ 
   children, 
   initialInvoice, 
-  token 
+  token,
+  supabaseUrl,
+  supabaseAnonKey
 }: InvoiceRefetchProviderProps) {
   const [invoice, setInvoice] = useState<InvoicePayload>(initialInvoice)
   const [isLoading, setIsLoading] = useState(false)
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
   const refetchInvoice = async () => {
     setIsLoading(true)
     try {
+      // Create Supabase client with passed credentials
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabase = createClient(supabaseUrl, supabaseAnonKey)
+      
       // Fetch fresh invoice data
       const { data: invoiceData, error: invoiceError } = await supabase
         .from("invoices")

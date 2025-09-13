@@ -116,7 +116,12 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
   const paymentStatus = searchParams?.payment;
 
   return (
-    <InvoiceRefetchProvider initialInvoice={invoice} token={params.token}>
+    <InvoiceRefetchProvider 
+      initialInvoice={invoice} 
+      token={params.token}
+      supabaseUrl={process.env.SUPABASE_URL!}
+      supabaseAnonKey={process.env.SUPABASE_ANON_KEY!}
+    >
       <InvoicePageContent paymentStatus={paymentStatus} />
     </InvoiceRefetchProvider>
   );
