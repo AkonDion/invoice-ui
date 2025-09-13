@@ -222,20 +222,70 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   }
 
   async function updateSystemValues(normalizedMessage: { data: Record<string, unknown>; hash: string }) {
-    const tx = normalizedMessage.data as Record<string, unknown> & { invoiceNumber?: string; transactionId?: string }
+    const tx = normalizedMessage.data as Record<string, unknown> & { 
+      invoiceNumber?: string; 
+      transactionId?: string;
+      status?: string;
+      statusAuth?: string;
+    }
+    
     if (tx.invoiceNumber && tx.transactionId) {
       try {
+        // Determine invoice status based on payment type and status
+        let invoiceStatus: string
+        const isACH = 'bankToken' in normalizedMessage.data
+        const paymentStatus = isACH ? tx.statusAuth : tx.status
+        
+        if (isACH) {
+          // ACH Payment mapping
+          switch (paymentStatus) {
+            case 'PENDING':
+              invoiceStatus = 'SENT' // Keep as SENT until clearing completes
+              break
+            case 'APPROVED':
+            case 'CLEARED':
+              invoiceStatus = 'PAID'
+              break
+            case 'DECLINED':
+            case 'REJECTED':
+              invoiceStatus = 'DUE' // Keep as DUE for failed ACH
+              break
+            default:
+              invoiceStatus = 'SENT' // Default to SENT for unknown ACH status
+          }
+        } else {
+          // Credit Card Payment mapping
+          switch (paymentStatus) {
+            case 'APPROVED':
+              invoiceStatus = 'PAID'
+              break
+            case 'DECLINED':
+            case 'REJECTED':
+            case 'ABORTED':
+              invoiceStatus = 'DUE' // Keep as DUE for failed payments
+              break
+            default:
+              invoiceStatus = 'DUE' // Default to DUE for unknown CC status
+          }
+        }
+
+        console.warn('💳 Payment status mapping:', {
+          paymentType: isACH ? 'ACH' : 'CREDIT_CARD',
+          paymentStatus,
+          invoiceStatus
+        })
+
         const res = await fetch('/api/invoice/update-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             invoiceNumber: tx.invoiceNumber,
-            status: 'paid',
+            status: invoiceStatus,
             transactionId: tx.transactionId
           })
         })
         if (!res.ok) console.error('❌ Failed to update invoice status:', await res.text())
-        else console.warn('✅ Invoice status updated')
+        else console.warn('✅ Invoice status updated to:', invoiceStatus)
       } catch (e) {
         console.error('❌ Error updating invoice status:', e)
       }
