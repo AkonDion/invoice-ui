@@ -15,16 +15,12 @@ interface InvoiceRefetchProviderProps {
   children: React.ReactNode
   initialInvoice: InvoicePayload
   token: string
-  supabaseUrl: string
-  supabaseAnonKey: string
 }
 
 export function InvoiceRefetchProvider({ 
   children, 
   initialInvoice, 
-  token,
-  supabaseUrl,
-  supabaseAnonKey
+  token
 }: InvoiceRefetchProviderProps) {
   const [invoice, setInvoice] = useState<InvoicePayload>(initialInvoice)
   const [isLoading, setIsLoading] = useState(false)
@@ -32,108 +28,22 @@ export function InvoiceRefetchProvider({
   const refetchInvoice = async () => {
     setIsLoading(true)
     try {
-      // Create Supabase client with passed credentials
-      const { createClient } = await import('@supabase/supabase-js')
-      const supabase = createClient(supabaseUrl, supabaseAnonKey)
+      // Use API route instead of direct Supabase client
+      const response = await fetch(`/api/invoice/refetch?token=${encodeURIComponent(token)}`)
       
-      // Fetch fresh invoice data
-      const { data: invoiceData, error: invoiceError } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("token", token)
-        .single()
-
-      if (invoiceError || !invoiceData) {
-        console.error("Invoice refetch error:", invoiceError)
+      if (!response.ok) {
+        console.error('Failed to refetch invoice:', response.statusText)
         return
       }
 
-      // Fetch invoice items
-      const { data: itemsData, error: itemsError } = await supabase
-        .from("invoice_items")
-        .select("*")
-        .eq("invoice_id", invoiceData.invoice_id)
-        .order("line_index")
-
-      if (itemsError || !itemsData) {
-        console.error("Invoice items refetch error:", itemsError)
-        return
+      const data = await response.json()
+      
+      if (data.invoice) {
+        setInvoice(data.invoice)
+        console.log('✅ Invoice data refetched successfully')
+      } else {
+        console.error('No invoice data received from refetch')
       }
-
-      // Transform the data to match InvoicePayload format
-      const updatedInvoice: InvoicePayload = {
-        invoiceId: invoiceData.invoice_id,
-        tipAmount: 0,
-        depositAmount: 0,
-        orderFields: [],
-        invoiceNumber: invoiceData.invoice_number,
-        token: invoiceData.token,
-        amount: invoiceData.amount,
-        amountPaid: invoiceData.amount_paid,
-        amountDue: invoiceData.amount_due,
-        currency: invoiceData.currency,
-        type: invoiceData.type,
-        hasConvenienceFee: typeof invoiceData.has_convenience_fee === 'number' ? invoiceData.has_convenience_fee : Number(invoiceData.has_convenience_fee),
-        dateCreated: invoiceData.date_created,
-        dateUpdated: invoiceData.date_updated,
-        dateIssued: invoiceData.date_issued,
-        datePaid: invoiceData.date_paid,
-        status: invoiceData.status,
-        customerId: invoiceData.customer_id,
-        customerCode: invoiceData.customer_code,
-        notes: invoiceData.notes,
-        tax: {
-          details: invoiceData.tax_details,
-          amount: invoiceData.tax_amount,
-        },
-        discounts: {
-          details: invoiceData.discount_details,
-          amount: invoiceData.discount_amount,
-        },
-        billingAddress: {
-          name: invoiceData.billing_name,
-          street1: invoiceData.billing_street1,
-          street2: invoiceData.billing_street2,
-          city: invoiceData.billing_city,
-          province: invoiceData.billing_province,
-          country: invoiceData.billing_country,
-          postalCode: invoiceData.billing_postal_code,
-          phone: invoiceData.billing_phone,
-          email: invoiceData.billing_email,
-        },
-        shipping: {
-          amount: invoiceData.shipping_amount,
-          details: invoiceData.shipping_details,
-          address: {
-            name: invoiceData.shipping_name,
-            street1: invoiceData.shipping_street1,
-            street2: invoiceData.shipping_street2,
-            city: invoiceData.shipping_city,
-            province: invoiceData.shipping_province,
-            country: invoiceData.shipping_country,
-            postalCode: invoiceData.shipping_postal_code,
-            phone: invoiceData.shipping_phone,
-            email: invoiceData.shipping_email,
-          },
-        },
-        lineItems: itemsData.map(item => ({
-          lineIndex: item.line_index,
-          sku: item.sku,
-          description: item.description,
-          quantity: item.quantity,
-          price: item.price,
-          total: item.total,
-          taxAmount: item.tax_amount,
-          discountAmount: item.discount_amount,
-        })),
-        pickup: {
-          name: invoiceData.pickup_name,
-          date: invoiceData.pickup_date,
-        },
-      }
-
-      setInvoice(updatedInvoice)
-      console.log('✅ Invoice data refetched successfully')
     } catch (error) {
       console.error('❌ Error refetching invoice:', error)
     } finally {
