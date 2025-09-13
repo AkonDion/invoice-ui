@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { invoice } = body;
+    const { invoice, confirmationScreen = false } = body;
     
     // Validate required fields
     if (!invoice || !invoice.amount || !invoice.currency) {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber: invoice.invoiceNumber,
       paymentMethod: 'cc-ach',
       hasConvenienceFee: invoice.hasConvenienceFee ? 1 : 0, // Ensure it's exactly 1 or 0
-      confirmationScreen: true,
+      confirmationScreen: confirmationScreen,
       displayContactFields: 0
     };
 

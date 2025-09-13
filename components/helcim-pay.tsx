@@ -274,6 +274,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             hasConvenienceFee: invoice.hasConvenienceFee,
           },
           customerInfo,
+          confirmationScreen: false, // Disable Helcim's default success screen
         }),
       })
 
