@@ -89,4 +89,13 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Ensure page content remains visible when Helcim modal opens */
+  body.hds-o-modal__prevent-background-scroll > div,
+  body[class*="modal"] > div,
+  body[style*="overflow"] > div {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
 }
