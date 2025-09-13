@@ -66,99 +66,120 @@ function safeLog(obj: unknown) {
 }
 
 export async function POST(req: NextRequest) {
-  let body: any = null
   try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
-
-  const rawDataResponse = body?.rawDataResponse as HelcimCCResponse | HelcimACHResponse | undefined
-  const checkoutToken = body?.checkoutToken as string | undefined
-  const hash = body?.hash as string | undefined
-
-  // Basic request validation
-  if (!rawDataResponse || !checkoutToken || !hash) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-  }
-
-  // Lookup secretToken for this checkoutToken (must have been saved at initialization)
-  // Expect a row inserted on init with fields:
-  //   payment_type: 'INITIALIZATION', checkout_token, secret_token, token_expires_at
-  const { data: tokenRow, error: tokenErr } = await supabase
-    .from('payment_tokens')
-    .select('secret_token, token_expires_at')
-    .eq('checkout_token', checkoutToken)
-    .single()
-
-  if (tokenErr || !tokenRow) {
-    console.error('Secret token lookup failed:', tokenErr || 'no row')
-    return NextResponse.json({ error: 'Invalid checkout token' }, { status: 400 })
-  }
-
-  if (new Date() > new Date(tokenRow.token_expires_at)) {
-    return NextResponse.json({ error: 'Checkout token expired' }, { status: 400 })
-  }
-
-  const secretToken = tokenRow.secret_token as string
-  const calculatedHash = computeHash(rawDataResponse, secretToken)
-
-  const isValid = calculatedHash === hash
-
-  // Persist the transaction row (optional; adjust table as needed)
-  try {
-    const isCreditCard = !('bankToken' in rawDataResponse)
-    const { error: insertErr } = await supabase.from('payment_transactions').insert({
-      transaction_id: rawDataResponse.transactionId,
-      date_created: rawDataResponse.dateCreated,
-      payment_type: isCreditCard ? 'CREDIT_CARD' : 'ACH',
-      status: isCreditCard
-        ? (rawDataResponse as HelcimCCResponse).status
-        : (rawDataResponse as HelcimACHResponse).statusAuth,
-      amount: parseFloat(rawDataResponse.amount),
-      currency: rawDataResponse.currency,
-      customer_code: rawDataResponse.customerCode,
-      invoice_number: rawDataResponse.invoiceNumber,
-      card_token: isCreditCard ? (rawDataResponse as HelcimCCResponse).cardToken ?? null : null,
-      card_last_four: isCreditCard ? ((rawDataResponse as HelcimCCResponse).cardNumber ?? '').slice(-4) : null,
-      bank_token: !isCreditCard ? (rawDataResponse as HelcimACHResponse).bankToken : null,
-      bank_account_last_four: !isCreditCard ? (rawDataResponse as HelcimACHResponse).bankAccountNumber.slice(-4) : null,
-      hash_validated: isValid,
-      response_data: rawDataResponse
-    })
-    if (insertErr) {
-      console.error('Insert payment_transactions error:', insertErr)
+    let body: Record<string, unknown> | null = null
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid JSON in request body' 
+      }, { status: 400 })
     }
-  } catch (e) {
-    console.error('Unexpected insert error:', e)
+
+    const rawDataResponse = body?.rawDataResponse as HelcimCCResponse | HelcimACHResponse | undefined
+    const checkoutToken = body?.checkoutToken as string | undefined
+    const hash = body?.hash as string | undefined
+
+    // Basic request validation
+    if (!rawDataResponse || !checkoutToken || !hash) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Missing required fields: rawDataResponse, checkoutToken, or hash' 
+      }, { status: 400 })
+    }
+
+    // Lookup secretToken for this checkoutToken (must have been saved at initialization)
+    // Expect a row inserted on init with fields:
+    //   payment_type: 'INITIALIZATION', checkout_token, secret_token, token_expires_at
+    const { data: tokenRow, error: tokenErr } = await supabase
+      .from('payment_transactions')
+      .select('secret_token, token_expires_at')
+      .eq('checkout_token', checkoutToken)
+      .eq('payment_type', 'INITIALIZATION')
+      .single()
+
+    if (tokenErr || !tokenRow) {
+      console.error('Secret token lookup failed:', tokenErr || 'no row')
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid or unknown checkout token' 
+      }, { status: 400 })
+    }
+
+    if (new Date() > new Date(tokenRow.token_expires_at)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Checkout token has expired' 
+      }, { status: 400 })
+    }
+
+    const secretToken = tokenRow.secret_token as string
+    const calculatedHash = computeHash(rawDataResponse, secretToken)
+
+    const isValid = calculatedHash === hash
+
+    // Persist the transaction row (optional; adjust table as needed)
+    try {
+      const isCreditCard = !('bankToken' in rawDataResponse)
+      const { error: insertErr } = await supabase.from('payment_transactions').insert({
+        transaction_id: rawDataResponse.transactionId,
+        date_created: rawDataResponse.dateCreated,
+        payment_type: isCreditCard ? 'CREDIT_CARD' : 'ACH',
+        status: isCreditCard
+          ? (rawDataResponse as HelcimCCResponse).status
+          : (rawDataResponse as HelcimACHResponse).statusAuth,
+        amount: parseFloat(rawDataResponse.amount),
+        currency: rawDataResponse.currency,
+        customer_code: rawDataResponse.customerCode,
+        invoice_number: rawDataResponse.invoiceNumber,
+        card_token: isCreditCard ? (rawDataResponse as HelcimCCResponse).cardToken ?? null : null,
+        card_last_four: isCreditCard ? ((rawDataResponse as HelcimCCResponse).cardNumber ?? '').slice(-4) : null,
+        bank_token: !isCreditCard ? (rawDataResponse as HelcimACHResponse).bankToken : null,
+        bank_account_last_four: !isCreditCard ? (rawDataResponse as HelcimACHResponse).bankAccountNumber.slice(-4) : null,
+        hash_validated: isValid,
+        response_data: rawDataResponse
+      })
+      if (insertErr) {
+        console.error('Insert payment_transactions error:', insertErr)
+      }
+    } catch (e) {
+      console.error('Unexpected insert error:', e)
+    }
+
+    // Structured log
+    process.stdout.write(`[HELCIM-VALIDATE] ${safeLog({
+      ts: new Date().toISOString(),
+      checkoutToken: checkoutToken?.slice(0, 8) + '…',
+      receivedHash: hash?.slice(0, 10) + '…',
+      calculatedHash: calculatedHash?.slice(0, 10) + '…',
+      isValid
+    })}\n`)
+
+    if (!isValid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid payment response signature',
+          hashMatch: false
+        },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      transactionId: rawDataResponse.transactionId,
+      paymentType: 'bankToken' in rawDataResponse ? 'ACH' : 'CREDIT_CARD',
+      status: 'bankToken' in rawDataResponse
+        ? (rawDataResponse as HelcimACHResponse).statusAuth
+        : (rawDataResponse as HelcimCCResponse).status
+    })
+  } catch (error) {
+    console.error('Unexpected error in validation route:', error)
+    return NextResponse.json({
+      success: false,
+      error: 'Internal server error during validation'
+    }, { status: 500 })
   }
-
-  // Structured log
-  process.stdout.write(`[HELCIM-VALIDATE] ${safeLog({
-    ts: new Date().toISOString(),
-    checkoutToken: checkoutToken?.slice(0, 8) + '…',
-    receivedHash: hash?.slice(0, 10) + '…',
-    calculatedHash: calculatedHash?.slice(0, 10) + '…',
-    isValid
-  })}\n`)
-
-  if (!isValid) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Invalid payment response signature',
-        hashMatch: false
-      },
-      { status: 400 }
-    )
-  }
-
-  return NextResponse.json({
-    success: true,
-    transactionId: rawDataResponse.transactionId,
-    paymentType: 'bankToken' in rawDataResponse ? 'ACH' : 'CREDIT_CARD',
-    status: 'bankToken' in rawDataResponse
-      ? (rawDataResponse as HelcimACHResponse).statusAuth
-      : (rawDataResponse as HelcimCCResponse).status
-  })
 }

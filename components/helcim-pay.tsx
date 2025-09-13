@@ -23,6 +23,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentCheckoutToken, setCurrentCheckoutToken] = useState<string | null>(null)
+  const [isValidating, setIsValidating] = useState(false)
 
   // Load HelcimPay script
   useEffect(() => {
@@ -98,6 +99,12 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         console.warn('🎉 Payment SUCCESS detected!')
         console.warn('🔍 Raw eventMessage:', eventMessage)
 
+        // In-flight guard to prevent double validation
+        if (isValidating) {
+          console.warn('⚠️ Validation already in progress, ignoring duplicate SUCCESS event')
+          return
+        }
+
         // Normalize eventMessage → { hash, data }
         let normalized: { hash: string; data: Record<string, unknown> }
         try {
@@ -107,22 +114,22 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
           if (
             parsed &&
             typeof parsed === 'object' &&
-            (parsed as any).data &&
-            (parsed as any).data.hash &&
-            (parsed as any).data.data
+            (parsed as Record<string, unknown>).data &&
+            ((parsed as Record<string, unknown>).data as Record<string, unknown>).hash &&
+            ((parsed as Record<string, unknown>).data as Record<string, unknown>).data
           ) {
             normalized = {
-              hash: (parsed as any).data.hash,
-              data: (parsed as any).data.data
+              hash: ((parsed as Record<string, unknown>).data as Record<string, unknown>).hash as string,
+              data: ((parsed as Record<string, unknown>).data as Record<string, unknown>).data as Record<string, unknown>
             }
             console.warn('📦 Unwrapped HTTP wrapper to normalized message:', normalized)
           } else if (
             parsed &&
             typeof parsed === 'object' &&
-            (parsed as any).hash &&
-            (parsed as any).data
+            (parsed as Record<string, unknown>).hash &&
+            (parsed as Record<string, unknown>).data
           ) {
-            normalized = parsed as any
+            normalized = parsed as { hash: string; data: Record<string, unknown> }
             console.warn('📦 Already normalized message:', normalized)
           } else {
             throw new Error('Invalid eventMessage shape - missing hash or data')
@@ -148,7 +155,8 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
           hashLength: normalized.hash.length
         })
 
-        // Validate server-side (secretToken lookup)
+        // Set validating flag and validate server-side (secretToken lookup)
+        setIsValidating(true)
         console.warn('🔐 Starting validation...')
         validateResponse(normalized, currentCheckoutToken)
           .then(async (res) => {
@@ -174,6 +182,9 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             console.error('❌ Payment validation network error:', err)
             setError('Could not verify payment. Please refresh or contact support.')
             window.location.href = `/invoice/${invoice.token}?payment=review`
+          })
+          .finally(() => {
+            setIsValidating(false)
           })
       }
     }
@@ -211,7 +222,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   }
 
   async function updateSystemValues(normalizedMessage: { data: Record<string, unknown>; hash: string }) {
-    const tx = normalizedMessage.data as { invoiceNumber?: string; transactionId?: string }
+    const tx = normalizedMessage.data as Record<string, unknown> & { invoiceNumber?: string; transactionId?: string }
     if (tx.invoiceNumber && tx.transactionId) {
       try {
         const res = await fetch('/api/invoice/update-status', {
@@ -289,9 +300,9 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         console.error('HelcimPay iframe error:', iframeError)
         throw new Error('Unable to open payment modal. Please try again.')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Payment initialization error:', err)
-      setError(err?.message || 'Payment failed. Please try again.')
+      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
       setIsLoading(false)
     }

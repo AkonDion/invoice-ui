@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
+// Ensure Node runtime and no static caching
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+// Use SERVICE ROLE on the server so RLS doesn't block reads/writes
 const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+if (!supabaseUrl || !supabaseServiceRole) {
+  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceRole);
 
 export async function POST(request: NextRequest) {
   try {
