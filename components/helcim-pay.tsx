@@ -27,6 +27,13 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
   // Load HelcimPay script
   useEffect(() => {
+    // Check if script is already loaded
+    const existingScript = document.querySelector('script[src="https://secure.helcim.app/helcim-pay/services/start.js"]')
+    if (existingScript) {
+      setIsInitialized(true)
+      return
+    }
+
     const script = document.createElement('script')
     script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
     script.async = true
@@ -40,11 +47,8 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     document.head.appendChild(script)
 
     return () => {
-      // Cleanup script on unmount
-      const existingScript = document.querySelector('script[src="https://secure.helcim.app/helcim-pay/services/start.js"]')
-      if (existingScript) {
-        document.head.removeChild(existingScript)
-      }
+      // Don't remove script on unmount as it might be used by other components
+      // Just clean up the component state
     }
   }, [])
 
