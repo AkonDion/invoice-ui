@@ -25,9 +25,8 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   const [data, setData] = useState<{ checkoutToken?: string; secretToken?: string }>({})
   
 
-  // Load HelcimPay script and set up message listener
+  // Load HelcimPay script
   useEffect(() => {
-    console.warn('Setting up Helcim with data:', data);
     const script = document.createElement('script')
     script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
     script.async = true
@@ -40,7 +39,19 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
     document.head.appendChild(script)
 
-    // Set up message listener for HelcimPay responses
+    return () => {
+      // Cleanup script on unmount
+      const existingScript = document.querySelector('script[src="https://secure.helcim.app/helcim-pay/services/start.js"]')
+      if (existingScript) {
+        document.head.removeChild(existingScript)
+      }
+    }
+  }, [])
+
+  // Set up message listener for HelcimPay responses
+  useEffect(() => {
+    if (!data.checkoutToken) return;
+
     const HELCIM_ORIGIN = 'https://secure.helcim.app'
 
     const handleMessage = (event: MessageEvent) => {
@@ -150,14 +161,9 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     window.addEventListener('message', handleMessage)
 
     return () => {
-      // Cleanup script and event listener on unmount
-      const existingScript = document.querySelector('script[src="https://secure.helcim.app/helcim-pay/services/start.js"]')
-      if (existingScript) {
-        document.head.removeChild(existingScript)
-      }
       window.removeEventListener('message', handleMessage)
     }
-  }, [data])
+  }, [data.checkoutToken])
 
   const handlePayNow = async () => {
     if (!isInitialized) {
