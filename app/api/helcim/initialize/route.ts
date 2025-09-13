@@ -29,8 +29,6 @@ export async function POST(request: NextRequest) {
         appearance: string;
         brandColor: string;
         ctaButtonText: string;
-        modalBackgroundColor?: string;
-        modalOverlay?: boolean;
       };
       paymentType: string;
       amount: number;
@@ -47,9 +45,7 @@ export async function POST(request: NextRequest) {
       customStyling: {
         appearance: "dark",
         brandColor: process.env.HELCIM_BRAND_COLOR?.replace('#', '') || "00D6AF",
-        ctaButtonText: "pay",
-        modalBackgroundColor: "rgba(0, 0, 0, 0.75)",
-        modalOverlay: true
+        ctaButtonText: "pay"
       },
       paymentType: 'purchase',
       amount: invoice.amount,
