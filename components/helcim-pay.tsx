@@ -27,19 +27,18 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
   // Load HelcimPay script and set up message listener
   useEffect(() => {
-    console.warn('Setting up Helcim with data:', data);
+    // Check if Helcim script is loaded and appendHelcimPayIframe is available
+    const checkScriptLoaded = () => {
+      if (typeof window.appendHelcimPayIframe === 'function') {
+        setIsInitialized(true);
+        return;
+      }
+      
+      // If not loaded yet, check again in 100ms
+      setTimeout(checkScriptLoaded, 100);
+    };
     
-    const script = document.createElement('script')
-    script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
-    script.async = true
-    script.onload = () => {
-      setIsInitialized(true)
-    }
-    script.onerror = (error) => {
-      console.error('Failed to load HelcimPay script:', error)
-      setError('Failed to load HelcimPay script. Please check your internet connection.')
-    }
-    document.head.appendChild(script)
+    checkScriptLoaded();
 
     // Set up message listener for HelcimPay responses
     const HELCIM_ORIGIN = 'https://secure.helcim.app'
@@ -105,7 +104,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
 
     // Helper function to validate the response as shown in Helcim docs
-    function validateResponse(messageData: any) {
+    function validateResponse(messageData: { data: { data: string; hash: string } }) {
       console.warn('🔐 Validating with:', {
         data: messageData.data.data,
         hash: messageData.data.hash,
@@ -128,7 +127,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
 
     // Helper function to update other system values
-    async function updateSystemValues(paymentData: any) {
+    async function updateSystemValues(paymentData: { data?: { invoiceNumber: string; transactionId: string }; invoiceNumber?: string; transactionId?: string }) {
       // Ensure we're using the data structure from Helcim's response
       const data = paymentData.data || paymentData;
       
