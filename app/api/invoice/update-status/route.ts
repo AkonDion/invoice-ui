@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log the successful update
-    console.log('Invoice status updated:', {
+    console.warn('Invoice status updated:', {
       invoiceNumber,
       oldStatus: invoice.status,
       newStatus: status,

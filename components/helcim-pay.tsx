@@ -86,6 +86,15 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         console.error('Transaction aborted/failed:', eventMessage)
         setError('Payment was cancelled or failed. Please try again.')
         setIsLoading(false)
+        
+        // Redirect to error page for aborted payments
+        const errorParams = new URLSearchParams({
+          message: 'Payment was cancelled or failed',
+          code: 'PAYMENT_ABORTED',
+          invoiceNumber: invoice.invoiceNumber,
+          transactionId: 'Unknown'
+        })
+        window.location.href = `/error?${errorParams.toString()}`
         return
       }
 
@@ -168,20 +177,75 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
               console.warn('💾 Updating system values…')
               await updateSystemValues(normalized)
               console.warn('🚀 Redirecting to success page…')
-              window.location.href = `/invoice/${invoice.token}?payment=success`
+              
+              // Build success page URL with transaction details
+              const tx = normalized.data as Record<string, unknown> & { 
+                invoiceNumber?: string; 
+                transactionId?: string;
+                amount?: string;
+                status?: string;
+                statusAuth?: string;
+              }
+              const isACH = 'bankToken' in normalized.data
+              const paymentType = isACH ? 'ACH' : 'CREDIT_CARD'
+              const paymentStatus = isACH ? tx.statusAuth : tx.status
+              
+              const successParams = new URLSearchParams({
+                transactionId: tx.transactionId || '',
+                amount: tx.amount || invoice.amountDue.toString(),
+                invoiceNumber: tx.invoiceNumber || invoice.invoiceNumber,
+                paymentType,
+                status: paymentStatus || '',
+                email: invoice.billingAddress.email || ''
+              })
+              
+              window.location.href = `/success?${successParams.toString()}`
               return
             }
 
             // Validation explicitly failed
             console.error('❌ Server validation failed:', json)
             setError('Payment validation failed. Please contact support.')
-            window.location.href = `/invoice/${invoice.token}?payment=review`
+            
+            // Redirect to error page with user-friendly message
+            let userMessage = 'Payment verification failed. Please contact support.'
+            let errorCode = 'VALIDATION_FAILED'
+            
+            // Map technical server errors to user-friendly messages
+            if (json?.error) {
+              if (json.error.includes('checkout token')) {
+                userMessage = 'Payment session expired. Please try again.'
+                errorCode = 'SESSION_EXPIRED'
+              } else if (json.error.includes('signature')) {
+                userMessage = 'Payment verification failed. Please contact support.'
+                errorCode = 'SIGNATURE_INVALID'
+              } else if (json.error.includes('expired')) {
+                userMessage = 'Payment session expired. Please try again.'
+                errorCode = 'SESSION_EXPIRED'
+              }
+            }
+            
+            const errorParams = new URLSearchParams({
+              message: userMessage,
+              code: errorCode,
+              invoiceNumber: invoice.invoiceNumber,
+              transactionId: (normalized.data.transactionId as string) || 'Unknown'
+            })
+            window.location.href = `/error?${errorParams.toString()}`
           })
           .catch((err) => {
             // Network/runtime issues (was your earlier "Failed to fetch")
             console.error('❌ Payment validation network error:', err)
             setError('Could not verify payment. Please refresh or contact support.')
-            window.location.href = `/invoice/${invoice.token}?payment=review`
+            
+            // Redirect to error page with network error details
+            const errorParams = new URLSearchParams({
+              message: 'Network error during payment verification',
+              code: 'NETWORK_ERROR',
+              invoiceNumber: invoice.invoiceNumber,
+              transactionId: 'Unknown'
+            })
+            window.location.href = `/error?${errorParams.toString()}`
           })
           .finally(() => {
             setIsValidating(false)
