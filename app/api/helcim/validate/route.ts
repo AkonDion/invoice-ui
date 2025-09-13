@@ -153,7 +153,7 @@ function logTransaction(data: HelcimCCResponse | HelcimACHResponse, validationRe
 export async function POST(request: NextRequest) {
   let rawDataResponse;
   try {
-    const { rawDataResponse: responseData, checkoutToken, hash } = await request.json();
+    const { rawDataResponse: responseData, checkoutToken, secretToken, hash } = await request.json();
     rawDataResponse = responseData;
     
     process.stdout.write(`[HELCIM-VALIDATE] Received validation request: ${JSON.stringify({
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       hash
     }, null, 2)}\n`);
 
-    if (!rawDataResponse || !checkoutToken || !hash) {
+    if (!rawDataResponse || !checkoutToken || !secretToken || !hash) {
       console.error('Missing required fields in validation request');
       return NextResponse.json(
         { error: 'Invalid validation request' },
@@ -170,8 +170,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate the response hash
-    const calculatedHash = validateHash(rawDataResponse, checkoutToken);
+    // Validate the response hash using secretToken (not checkoutToken)
+    const calculatedHash = validateHash(rawDataResponse, secretToken);
     if (calculatedHash !== hash) {
       console.error('Hash validation failed');
       return NextResponse.json(

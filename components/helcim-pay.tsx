@@ -23,6 +23,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentCheckoutToken, setCurrentCheckoutToken] = useState<string | null>(null)
+  const [currentSecretToken, setCurrentSecretToken] = useState<string | null>(null)
   // Load HelcimPay script
   useEffect(() => {
     const script = document.createElement('script')
@@ -100,7 +101,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
           }
           
           console.warn('🔐 Starting validation...')
-          validateResponse({ data: paymentData }, currentCheckoutToken)
+          validateResponse({ data: paymentData }, currentCheckoutToken, currentSecretToken)
             .then(response => {
               console.warn('📡 Validation response:', response.status)
               if (response.ok) {
@@ -148,17 +149,23 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
 
     // Helper function to validate the response - using original working format
-    function validateResponse(messageData: { data: { data: unknown; hash: string } }, checkoutToken: string) {
+    function validateResponse(messageData: { data: { data: unknown; hash: string } }, checkoutToken: string, secretToken: string | null) {
       console.warn('🔐 Validating response with payload:', {
         hasData: !!messageData.data?.data,
         hasHash: !!messageData.data?.hash,
         checkoutToken: checkoutToken?.substring(0, 8) + '...',
+        hasSecretToken: !!secretToken,
         fullMessageData: messageData
       })
+      
+      if (!secretToken) {
+        throw new Error('Secret token not available for validation')
+      }
       
       const payload = {
         'rawDataResponse': messageData.data.data,
         'checkoutToken': checkoutToken,
+        'secretToken': secretToken,
         'hash': messageData.data.hash
       }
       
@@ -285,8 +292,9 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         throw new Error(data.error || 'Failed to initialize payment')
       }
 
-      // Store checkout token for message handling
+      // Store tokens for message handling
       setCurrentCheckoutToken(data.checkoutToken)
+      setCurrentSecretToken(data.secretToken)
 
       // Initialize HelcimPay with the checkout token
       // The HelcimPay.js library will handle the modal display automatically
