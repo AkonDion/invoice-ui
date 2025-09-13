@@ -22,6 +22,8 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentCheckoutToken, setCurrentCheckoutToken] = useState<string | null>(null)
+  const [currentSecretToken, setCurrentSecretToken] = useState<string | null>(null)
   // Load HelcimPay script and set up message listener
   useEffect(() => {
     const script = document.createElement('script')
@@ -41,7 +43,9 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== HELCIM_ORIGIN) return
-      if (event.data?.eventName && event.data.eventName.startsWith('helcim-pay-js-')) {
+      
+      // Check if this event is for our current checkout token
+      if (currentCheckoutToken && event.data?.eventName === `helcim-pay-js-${currentCheckoutToken}`) {
         if (event.data.eventStatus === 'ABORTED') {
           console.error('Transaction failed!', event.data.eventMessage)
           setError('Payment was cancelled or failed. Please try again.')
@@ -49,9 +53,84 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         }
 
         if (event.data.eventStatus === 'SUCCESS') {
-          // Payment successful, reload the page to show updated status
+          if (!currentCheckoutToken || !currentSecretToken) {
+            console.error('Missing tokens for validation')
+            setError('Payment validation failed - missing tokens')
+            setIsLoading(false)
+            return
+          }
+          validateResponse(event.data.eventMessage, currentCheckoutToken, currentSecretToken)
+            .then(response => {
+              if (response.ok) {
+                return response.json()
+              }
+              throw new Error('Payment validation failed')
+            })
+            .then(result => {
+              if (result.success) {
+                // Update system values
+                return updateSystemValues(event.data.eventMessage)
+              }
+              throw new Error('Payment validation failed')
+            })
+            .then(() => {
+              // Redirect to success page with payment status
+              window.location.href = `/invoice/${invoice.token}?payment=success`
+            })
+            .catch(err => {
+              console.error('Payment validation error:', err)
+              setError(err.message || 'Payment validation failed')
+              setIsLoading(false)
+            })
+        }
+
+        if (event.data.eventStatus === 'HIDE') {
+          setIsLoading(false)
+        }
+      }
+      
+      // Fallback for older event format (just in case)
+      else if (event.data?.eventName && event.data.eventName.startsWith('helcim-pay-js-')) {
+        if (event.data.eventStatus === 'SUCCESS') {
           window.location.reload()
         }
+      }
+    }
+
+    // Helper function to validate the response - following official Helcim documentation
+    function validateResponse(eventMessage: { data: unknown; hash: string }, checkoutToken: string, secretToken: string) {
+      const payload = {
+        'rawDataResponse': eventMessage.data,
+        'checkoutToken': checkoutToken,
+        'secretToken': secretToken
+      }
+      
+      return fetch('/api/helcim/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+    }
+
+    // Helper function to update other system values
+    async function updateSystemValues(paymentData: { data?: { invoiceNumber?: string; transactionId?: string } }) {
+      const data = paymentData.data || paymentData as { invoiceNumber?: string; transactionId?: string }
+      
+      // Update invoice status if we have the required data
+      if (data.invoiceNumber && data.transactionId) {
+        await fetch('/api/invoice/update-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            invoiceNumber: data.invoiceNumber,
+            status: 'paid',
+            transactionId: data.transactionId,
+          }),
+        })
       }
     }
 
@@ -118,6 +197,10 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         console.error('Payment initialization failed:', data)
         throw new Error(data.error || 'Failed to initialize payment')
       }
+
+      // Store both tokens for message handling and validation
+      setCurrentCheckoutToken(data.checkoutToken)
+      setCurrentSecretToken(data.secretToken)
 
       // Initialize HelcimPay with the checkout token
       // The HelcimPay.js library will handle the modal display automatically
