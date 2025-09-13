@@ -153,7 +153,7 @@ function logTransaction(data: HelcimCCResponse | HelcimACHResponse, validationRe
 export async function POST(request: NextRequest) {
   let rawDataResponse;
   try {
-    const { rawDataResponse: responseData, checkoutToken, secretToken, hash } = await request.json();
+    const { rawDataResponse: responseData, checkoutToken, hash } = await request.json();
     rawDataResponse = responseData;
     
     process.stdout.write(`[HELCIM-VALIDATE] Received validation request: ${JSON.stringify({
@@ -162,13 +162,40 @@ export async function POST(request: NextRequest) {
       hash
     }, null, 2)}\n`);
 
-    if (!rawDataResponse || !checkoutToken || !secretToken || !hash) {
+    if (!rawDataResponse || !checkoutToken || !hash) {
       console.error('Missing required fields in validation request');
       return NextResponse.json(
         { error: 'Invalid validation request' },
         { status: 400 }
       );
     }
+
+    // Look up the secretToken server-side using checkoutToken
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('payment_transactions')
+      .select('secret_token, token_expires_at')
+      .eq('checkout_token', checkoutToken)
+      .eq('payment_type', 'INITIALIZATION')
+      .single();
+
+    if (tokenError || !tokenData) {
+      console.error('Failed to find secretToken for checkoutToken:', checkoutToken);
+      return NextResponse.json(
+        { error: 'Invalid checkout token' },
+        { status: 400 }
+      );
+    }
+
+    // Check if token has expired
+    if (new Date() > new Date(tokenData.token_expires_at)) {
+      console.error('SecretToken has expired for checkoutToken:', checkoutToken);
+      return NextResponse.json(
+        { error: 'Checkout token has expired' },
+        { status: 400 }
+      );
+    }
+
+    const secretToken = tokenData.secret_token;
 
     // Validate the response hash using secretToken (not checkoutToken)
     const calculatedHash = validateHash(rawDataResponse, secretToken);

@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function POST(request: NextRequest) {
   try {
@@ -135,9 +141,38 @@ export async function POST(request: NextRequest) {
       }
     }, null, 2));
 
+    // Store the secretToken server-side with expiration (60 minutes)
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    
+    const { error: storeError } = await supabase
+      .from('payment_transactions')
+      .insert({
+        transaction_id: `init_${data.checkoutToken}`, // Temporary ID for initialization
+        date_created: new Date().toISOString(),
+        payment_type: 'INITIALIZATION',
+        status: 'PENDING',
+        amount: invoice.amount,
+        currency: invoice.currency,
+        customer_code: invoice.customerCode,
+        invoice_number: invoice.invoiceNumber,
+        checkout_token: data.checkoutToken,
+        secret_token: data.secretToken,
+        token_expires_at: expiresAt,
+        hash_validated: false,
+        response_data: { initialization: true, checkoutToken: data.checkoutToken }
+      });
+
+    if (storeError) {
+      console.error('Failed to store Helcim tokens:', storeError);
+      return NextResponse.json(
+        { error: 'Failed to store payment tokens' },
+        { status: 500 }
+      );
+    }
+
+    // Only return checkoutToken to client - secretToken stays server-side
     return NextResponse.json({
       checkoutToken: data.checkoutToken,
-      secretToken: data.secretToken,
     });
   } catch (error) {
     console.error('Payment initialization error:', error);
