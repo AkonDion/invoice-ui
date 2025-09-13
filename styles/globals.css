@@ -89,8 +89,4 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Let Helcim handle iframe styling */
-  iframe[src*="helcim-pay"] {
-    border: none;
-  }
 }
