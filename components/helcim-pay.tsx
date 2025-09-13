@@ -29,12 +29,19 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   useEffect(() => {
     // Check if Helcim script is loaded and appendHelcimPayIframe is available
     const checkScriptLoaded = () => {
+      console.log('Checking if Helcim script is loaded...', {
+        appendHelcimPayIframe: typeof window.appendHelcimPayIframe,
+        scriptElement: document.querySelector('script[src*="helcim-pay/services/start.js"]')
+      });
+
       if (typeof window.appendHelcimPayIframe === 'function') {
+        console.log('✅ Helcim script loaded and function available');
         setIsInitialized(true);
         return;
       }
       
       // If not loaded yet, check again in 100ms
+      console.log('⏳ Helcim script not ready, checking again in 100ms');
       setTimeout(checkScriptLoaded, 100);
     };
     

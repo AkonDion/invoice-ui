@@ -33,7 +33,7 @@ html {
         <script 
           type="text/javascript" 
           src="https://secure.helcim.app/helcim-pay/services/start.js"
-          async
+          defer
         />
       </head>
       <body>

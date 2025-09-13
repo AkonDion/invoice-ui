@@ -31,9 +31,14 @@ export function LineItemsTable({ items, currency }: LineItemsTableProps) {
                 <TableCell className="text-white/80 font-mono text-xs">{item.sku}</TableCell>
                 <TableCell className="text-white/90">
                   <div className="max-w-xs">
-                    <span title={item.description}>
-                      {item.description.length > 50 ? `${item.description.substring(0, 50)}...` : item.description}
-                    </span>
+                    <span 
+                      title={item.description.replace(/<[^>]*>/g, '')} 
+                      dangerouslySetInnerHTML={{ 
+                        __html: item.description.length > 50 
+                          ? `${item.description.substring(0, 50)}...` 
+                          : item.description 
+                      }} 
+                    />
                   </div>
                 </TableCell>
                 <TableCell className="text-white/80 text-center">{item.quantity}</TableCell>
