@@ -1,6 +1,7 @@
 import { InvoiceCard } from "@/components/invoice-card";
 import type { InvoicePayload } from "@/types/invoice";
 import { createClient } from "@supabase/supabase-js";
+import { InvoiceRefetchProvider, useInvoiceRefetch } from "@/components/invoice-refetch-provider";
 
 interface InvoicePageProps {
   params: { token: string };
@@ -115,6 +116,14 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
   const paymentStatus = searchParams?.payment;
 
   return (
+    <InvoiceRefetchProvider initialInvoice={invoice} token={params.token}>
+      <InvoicePageContent paymentStatus={paymentStatus} />
+    </InvoiceRefetchProvider>
+  );
+}
+
+function InvoicePageContent({ paymentStatus }: { paymentStatus?: string | string[] }) {
+  return (
     <div className="min-h-[100dvh] overflow-x-hidden relative">
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
@@ -137,8 +146,26 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
             Payment cancelled.
           </div>
         )}
-        <InvoiceCard invoice={invoice} />
+        <InvoiceCardWithRefetch />
       </div>
     </div>
   );
+}
+
+function InvoiceCardWithRefetch() {
+  const { invoice } = useInvoiceRefetch();
+  
+  if (!invoice) {
+    return (
+      <div className="w-full max-w-4xl mx-auto p-8 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
+        <div className="animate-pulse">
+          <div className="h-8 bg-white/20 rounded mb-4"></div>
+          <div className="h-4 bg-white/10 rounded mb-2"></div>
+          <div className="h-4 bg-white/10 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return <InvoiceCard invoice={invoice} />;
 }
