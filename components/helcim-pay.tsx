@@ -27,25 +27,18 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
   // Load HelcimPay script and set up message listener
   useEffect(() => {
-    // Check if Helcim script is loaded and appendHelcimPayIframe is available
-    const checkScriptLoaded = () => {
-      console.log('Checking if Helcim script is loaded...', {
-        appendHelcimPayIframe: typeof window.appendHelcimPayIframe,
-        scriptElement: document.querySelector('script[src*="helcim-pay/services/start.js"]')
-      });
-
-      if (typeof window.appendHelcimPayIframe === 'function') {
-        console.log('✅ Helcim script loaded and function available');
-        setIsInitialized(true);
-        return;
-      }
-      
-      // If not loaded yet, check again in 100ms
-      console.log('⏳ Helcim script not ready, checking again in 100ms');
-      setTimeout(checkScriptLoaded, 100);
-    };
-    
-    checkScriptLoaded();
+    console.warn('Setting up Helcim with data:', data);
+    const script = document.createElement('script')
+    script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
+    script.async = true
+    script.onload = () => {
+      setIsInitialized(true)
+    }
+    script.onerror = (error) => {
+      console.error('Failed to load HelcimPay script:', error)
+      setError('Failed to load HelcimPay script. Please check your internet connection.')
+    }
+    document.head.appendChild(script)
 
     // Set up message listener for HelcimPay responses
     const HELCIM_ORIGIN = 'https://secure.helcim.app'
@@ -111,7 +104,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
 
     // Helper function to validate the response as shown in Helcim docs
-    function validateResponse(messageData: { data: { data: string; hash: string } }) {
+    function validateResponse(messageData: any) {
       console.warn('🔐 Validating with:', {
         data: messageData.data.data,
         hash: messageData.data.hash,
@@ -134,7 +127,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
 
     // Helper function to update other system values
-    async function updateSystemValues(paymentData: { data?: { invoiceNumber: string; transactionId: string }; invoiceNumber?: string; transactionId?: string }) {
+    async function updateSystemValues(paymentData: any) {
       // Ensure we're using the data structure from Helcim's response
       const data = paymentData.data || paymentData;
       
@@ -162,13 +155,6 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       if (existingScript) {
         document.head.removeChild(existingScript)
       }
-      
-      // Remove the Helcim iframe using their native function
-      const frame = document.getElementById('helcimPayIframe');
-      if (frame instanceof HTMLIFrameElement) {
-        frame.remove();
-      }
-      
       window.removeEventListener('message', handleMessage)
     }
   }, [data])
@@ -232,10 +218,9 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       });
 
       // Initialize HelcimPay with the checkout token
-      // Let Helcim's native implementation handle the modal display
+      // The HelcimPay.js library will handle the modal display automatically
       try {
         console.warn('🚀 Initializing Helcim iframe with token:', responseData.checkoutToken);
-        // Use native appendHelcimPayIframe with default allowExit behavior
         window.appendHelcimPayIframe(responseData.checkoutToken);
       } catch (iframeError) {
         console.error('HelcimPay iframe error:', iframeError);

@@ -30,11 +30,6 @@ html {
   --font-mono: ${GeistMono.variable};
 }
         `}</style>
-        <script 
-          type="text/javascript" 
-          src="https://secure.helcim.app/helcim-pay/services/start.js"
-          defer
-        />
       </head>
       <body>
         <ThemeProvider
