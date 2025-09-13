@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber: invoice.invoiceNumber,
       paymentMethod: 'cc-ach',
       hasConvenienceFee: invoice.hasConvenienceFee ? 1 : 0, // Ensure it's exactly 1 or 0
-      confirmationScreen: false,
+      confirmationScreen: true,
       displayContactFields: 0
     };
 
