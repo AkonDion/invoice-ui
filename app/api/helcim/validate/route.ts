@@ -170,6 +170,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate the response hash
+    const calculatedHash = validateHash(rawDataResponse, checkoutToken);
+    if (calculatedHash !== hash) {
+      console.error('Hash validation failed');
+      return NextResponse.json(
+        { error: 'Invalid payment response signature' },
+        { status: 400 }
+      );
+    }
+
     // Determine payment type based on response structure
     const paymentType = 'bankToken' in rawDataResponse ? 'ACH' : 'CREDIT_CARD';
     

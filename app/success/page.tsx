@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -12,8 +13,8 @@ export default function SuccessPage() {
   const amount = searchParams.get('amount');
   const invoiceNumber = searchParams.get('invoiceNumber');
   const paymentType = searchParams.get('paymentType');
-  const status = searchParams.get('status');
   const email = searchParams.get('email');
+  const status = searchParams.get('status');
 
   return (
     <div className="min-h-[100dvh] overflow-x-hidden relative">
@@ -45,10 +46,19 @@ export default function SuccessPage() {
                       <p className="text-lg text-white/70">
                         Thank you for your payment. Your ACH transfer has been initiated successfully.
                       </p>
-                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-3">
-                        <p className="text-yellow-400/90">
-                          ACH transfers typically take 3-5 business days to complete. We will send a payment confirmation and updated invoice to {email} once the transfer is finalized.
-                        </p>
+                      <div className="space-y-2">
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-3">
+                          <p className="text-yellow-400/90">
+                            ACH transfers typically take 3-5 business days to complete. We will send a payment confirmation and updated invoice to {email} once the transfer is finalized.
+                          </p>
+                        </div>
+                        {status === 'PENDING' && (
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-3">
+                            <p className="text-yellow-400/90">
+                              Transfer Status: Pending Bank Verification
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -102,5 +112,17 @@ export default function SuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[100dvh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-white/20 border-t-white/60" />
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
