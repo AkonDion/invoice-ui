@@ -28,6 +28,19 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   // Load HelcimPay script and set up message listener
   useEffect(() => {
     console.warn('Setting up Helcim with data:', data);
+    
+    // Create a container for the Helcim iframe
+    const helcimContainer = document.createElement('div');
+    helcimContainer.id = 'helcim-container';
+    helcimContainer.style.position = 'fixed';
+    helcimContainer.style.top = '0';
+    helcimContainer.style.left = '0';
+    helcimContainer.style.width = '100%';
+    helcimContainer.style.height = '100%';
+    helcimContainer.style.zIndex = '9999';
+    helcimContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
+    document.body.appendChild(helcimContainer);
+    
     const script = document.createElement('script')
     script.src = 'https://secure.helcim.app/helcim-pay/services/start.js'
     script.async = true
@@ -155,6 +168,13 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       if (existingScript) {
         document.head.removeChild(existingScript)
       }
+      
+      // Remove the Helcim container
+      const container = document.getElementById('helcim-container')
+      if (container) {
+        document.body.removeChild(container)
+      }
+      
       window.removeEventListener('message', handleMessage)
     }
   }, [data])
@@ -221,6 +241,12 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       // The HelcimPay.js library will handle the modal display automatically
       try {
         console.warn('🚀 Initializing Helcim iframe with token:', responseData.checkoutToken);
+        // First, make sure the container is ready
+        const container = document.getElementById('helcim-container');
+        if (!container) {
+          throw new Error('Helcim container not found');
+        }
+        // Then initialize the iframe
         window.appendHelcimPayIframe(responseData.checkoutToken);
       } catch (iframeError) {
         console.error('HelcimPay iframe error:', iframeError);
