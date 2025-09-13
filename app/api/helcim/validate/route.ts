@@ -203,8 +203,42 @@ export async function POST(request: NextRequest) {
       rawResponse: rawDataResponse
     }, null, 2)}\n`);
 
+    // Determine specific error message based on the error type
+    let errorMessage = 'An unexpected error occurred during payment processing';
+    let errorCode = 'PAYMENT_ERROR';
+
+    if (error instanceof Error) {
+      // Handle specific error cases
+      if (error.message.includes('card_declined')) {
+        errorMessage = 'Your card was declined. Please try a different payment method.';
+        errorCode = 'CARD_DECLINED';
+      } else if (error.message.includes('insufficient_funds')) {
+        errorMessage = 'Insufficient funds. Please try a different card or payment method.';
+        errorCode = 'INSUFFICIENT_FUNDS';
+      } else if (error.message.includes('expired_card')) {
+        errorMessage = 'This card has expired. Please use a different card.';
+        errorCode = 'EXPIRED_CARD';
+      } else if (error.message.includes('invalid_number')) {
+        errorMessage = 'Invalid card number. Please check and try again.';
+        errorCode = 'INVALID_CARD';
+      } else if (error.message.includes('invalid_expiry')) {
+        errorMessage = 'Invalid expiration date. Please check and try again.';
+        errorCode = 'INVALID_EXPIRY';
+      } else if (error.message.includes('invalid_cvc')) {
+        errorMessage = 'Invalid security code. Please check and try again.';
+        errorCode = 'INVALID_CVC';
+      } else if (error.message.includes('processing_error')) {
+        errorMessage = 'There was an error processing your payment. Please try again.';
+        errorCode = 'PROCESSING_ERROR';
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Payment validation error' },
+      { 
+        error: errorMessage,
+        code: errorCode,
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

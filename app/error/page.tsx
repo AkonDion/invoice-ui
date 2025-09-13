@@ -30,13 +30,7 @@ export default function ErrorPage() {
               className="opacity-70 drop-shadow-lg"
             />
             
-            <div className="rounded-full bg-red-500/20 p-6 border border-red-500/20">
-              <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-6">
               <h1 className="text-4xl font-bold text-white">
                 Payment Failed
               </h1>
@@ -48,21 +42,24 @@ export default function ErrorPage() {
                 </p>
                 
                 {/* Error Details */}
-                <div className="space-y-3 bg-red-500/5 p-4 rounded-xl border border-red-500/20">
+                <div className="bg-gradient-to-b from-red-500/10 to-red-500/5 rounded-xl border border-red-500/20 overflow-hidden">
                   {errorCode && (
-                    <p className="text-white/60">
-                      Error Code: <span className="text-white">{errorCode}</span>
-                    </p>
+                    <div className="px-4 py-3 border-b border-red-500/10 flex justify-between items-center">
+                      <span className="text-white/60">Error Code</span>
+                      <span className="text-white font-medium">{errorCode}</span>
+                    </div>
                   )}
                   {invoiceNumber && (
-                    <p className="text-white/60">
-                      Invoice: <span className="text-white">{invoiceNumber}</span>
-                    </p>
+                    <div className="px-4 py-3 border-b border-red-500/10 flex justify-between items-center">
+                      <span className="text-white/60">Invoice</span>
+                      <span className="text-white font-medium">{invoiceNumber}</span>
+                    </div>
                   )}
                   {transactionId && (
-                    <p className="text-white/60">
-                      Transaction ID: <span className="text-white">{transactionId}</span>
-                    </p>
+                    <div className="px-4 py-3 bg-red-500/5 flex justify-between items-center">
+                      <span className="text-white/60">Transaction ID</span>
+                      <span className="text-white font-medium">{transactionId}</span>
+                    </div>
                   )}
                 </div>
 
@@ -82,7 +79,7 @@ export default function ErrorPage() {
                   </a>
 
                   <p className="text-sm text-white/40 text-center mt-4">
-                    Need help? Our support team is available 24/7 at support@comforthub.ca
+                    Need help? Contact our support team at support@comforthub.ca
                   </p>
                 </div>
               </div>

@@ -32,13 +32,7 @@ export default function SuccessPage() {
               className="opacity-70 drop-shadow-lg"
             />
             
-            <div className="rounded-full bg-white/10 p-6 border border-white/20">
-              <svg className="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-6">
               <h1 className="text-4xl font-bold text-white">
                 {paymentType === 'ACH' ? 'Payment Initiated' : 'Payment Successful'}
               </h1>
@@ -46,28 +40,17 @@ export default function SuccessPage() {
               
               <div className="space-y-4">
                 {paymentType === 'ACH' ? (
-                  <div className="space-y-3">
-                    <p className="text-lg text-white/70">
-                      Thank you for your payment. Your ACH transfer has been initiated successfully.
-                    </p>
-                    <p className="text-sm text-white/50">
-                      Please note: ACH transfers typically take 3-5 business days to complete. Your payment status will be updated once the transfer is finalized.
-                    </p>
-                    {status === 'PENDING' && (
-                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                        <p className="text-yellow-400/90 text-sm">
-                          Transfer Status: Pending Bank Verification
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-lg text-white/70">
+                        Thank you for your payment. Your ACH transfer has been initiated successfully.
+                      </p>
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-3">
+                        <p className="text-yellow-400/90">
+                          ACH transfers typically take 3-5 business days to complete. We will send a payment confirmation and updated invoice to {email} once the transfer is finalized.
                         </p>
                       </div>
-                    )}
-                    {email && (
-                      <div className="flex items-center gap-2 text-white/60 bg-white/5 px-4 py-3 rounded-lg border border-white/10">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        <span>We've sent the payment confirmation and updated invoice to {email}</span>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -86,21 +69,24 @@ export default function SuccessPage() {
                 )}
                 
                 {/* Transaction Details */}
-                <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                <div className="bg-gradient-to-b from-white/10 to-white/5 rounded-xl border border-white/20 overflow-hidden">
                   {invoiceNumber && (
-                    <p className="text-white/60">
-                      Invoice: <span className="text-white">{invoiceNumber}</span>
-                    </p>
+                    <div className="px-4 py-3 border-b border-white/10 flex justify-between items-center">
+                      <span className="text-white/60">Invoice</span>
+                      <span className="text-white font-medium">{invoiceNumber}</span>
+                    </div>
                   )}
                   {transactionId && (
-                    <p className="text-white/60">
-                      Transaction ID: <span className="text-white">{transactionId}</span>
-                    </p>
+                    <div className="px-4 py-3 border-b border-white/10 flex justify-between items-center">
+                      <span className="text-white/60">Transaction ID</span>
+                      <span className="text-white font-medium">{transactionId}</span>
+                    </div>
                   )}
                   {amount && (
-                    <p className="text-white/60">
-                      Amount: <span className="text-white">${amount}</span>
-                    </p>
+                    <div className="px-4 py-3 bg-white/5 flex justify-between items-center">
+                      <span className="text-white/60">Amount</span>
+                      <span className="text-white font-medium">${amount}</span>
+                    </div>
                   )}
                 </div>
 

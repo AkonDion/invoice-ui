@@ -33,12 +33,27 @@ export default function TestPages() {
                 View ACH Pending
               </button>
 
-              <button
-                onClick={() => router.push('/error?message=Test%20payment%20error&code=TEST_ERROR&invoiceNumber=INV001')}
-                className="w-full py-3 px-4 bg-gradient-to-r from-red-500/20 to-red-500/10 hover:from-red-500/30 hover:to-red-500/20 border border-red-500/20 rounded-xl text-white font-medium transition-all duration-200"
-              >
-                View Error Page
-              </button>
+              <div className="space-y-2">
+                <p className="text-sm text-white/60 text-center">Error Scenarios:</p>
+                <button
+                  onClick={() => router.push('/error?message=Your%20card%20was%20declined.%20Please%20try%20a%20different%20payment%20method.&code=CARD_DECLINED&invoiceNumber=INV001')}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-red-500/20 to-red-500/10 hover:from-red-500/30 hover:to-red-500/20 border border-red-500/20 rounded-xl text-white font-medium transition-all duration-200"
+                >
+                  Card Declined Error
+                </button>
+                <button
+                  onClick={() => router.push('/error?message=Insufficient%20funds.%20Please%20try%20a%20different%20card%20or%20payment%20method.&code=INSUFFICIENT_FUNDS&invoiceNumber=INV001')}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-red-500/20 to-red-500/10 hover:from-red-500/30 hover:to-red-500/20 border border-red-500/20 rounded-xl text-white font-medium transition-all duration-200"
+                >
+                  Insufficient Funds Error
+                </button>
+                <button
+                  onClick={() => router.push('/error?message=Invalid%20card%20number.%20Please%20check%20and%20try%20again.&code=INVALID_CARD&invoiceNumber=INV001')}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-red-500/20 to-red-500/10 hover:from-red-500/30 hover:to-red-500/20 border border-red-500/20 rounded-xl text-white font-medium transition-all duration-200"
+                >
+                  Invalid Card Error
+                </button>
+              </div>
 
               <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-2">
                 <h2 className="text-white/70 font-medium">Test Parameters:</h2>
