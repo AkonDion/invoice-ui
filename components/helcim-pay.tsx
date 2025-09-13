@@ -75,6 +75,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
         if (event.data.eventStatus === 'SUCCESS') {
           console.warn('🎉 Payment SUCCESS detected!')
+          console.warn('🔍 Raw eventMessage:', event.data.eventMessage);
           
           // Parse the eventMessage if it's a string
           const messageData = typeof event.data.eventMessage === 'string' 
@@ -83,14 +84,33 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
           console.warn('📦 Parsed payment response:', messageData);
           
+          // The payment data structure from Helcim
+          // messageData.data contains the actual payment response with data and hash
+          const paymentData = messageData.data;
+          console.warn('📊 Payment data:', paymentData);
+          console.warn('📊 Payment data.data:', paymentData?.data);
+          console.warn('📊 Payment data.hash:', paymentData?.hash);
+          
+          // Check if we have the expected structure
+          if (!paymentData?.data || !paymentData?.hash) {
+            console.error('❌ Invalid payment data structure:', paymentData);
+            setError('Invalid payment response format');
+            setIsLoading(false);
+            return;
+          }
+          
           console.warn('🔐 Starting validation...')
-          validateResponse(messageData, currentCheckoutToken)
+          validateResponse({ data: paymentData }, currentCheckoutToken)
             .then(response => {
               console.warn('📡 Validation response:', response.status)
               if (response.ok) {
                 return response.json()
               }
-              throw new Error('Payment validation failed')
+              // Log the error response for debugging
+              return response.json().then(errorData => {
+                console.error('❌ Validation API error:', errorData)
+                throw new Error(`Payment validation failed: ${errorData.error || 'Unknown error'}`)
+              })
             })
             .then(result => {
               console.warn('✅ Validation result:', result)
@@ -132,7 +152,8 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       console.warn('🔐 Validating response with payload:', {
         hasData: !!messageData.data?.data,
         hasHash: !!messageData.data?.hash,
-        checkoutToken: checkoutToken?.substring(0, 8) + '...'
+        checkoutToken: checkoutToken?.substring(0, 8) + '...',
+        fullMessageData: messageData
       })
       
       const payload = {
@@ -140,6 +161,13 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         'checkoutToken': checkoutToken,
         'hash': messageData.data.hash
       }
+      
+      console.warn('📤 Sending validation payload:', {
+        hasRawData: !!payload.rawDataResponse,
+        hasCheckoutToken: !!payload.checkoutToken,
+        hasHash: !!payload.hash,
+        payload
+      })
       
       return fetch('/api/helcim/validate', {
         method: 'POST',
