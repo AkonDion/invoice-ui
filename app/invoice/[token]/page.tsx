@@ -1,7 +1,7 @@
-import { InvoiceCard } from "@/components/invoice-card";
 import type { InvoicePayload } from "@/types/invoice";
 import { createClient } from "@supabase/supabase-js";
-import { InvoiceRefetchProvider, useInvoiceRefetch } from "@/components/invoice-refetch-provider";
+import { InvoiceRefetchProvider } from "@/components/invoice-refetch-provider";
+import { InvoiceCardWithRefetch } from "@/components/invoice-card-with-refetch";
 
 interface InvoicePageProps {
   params: { token: string };
@@ -153,22 +153,4 @@ function InvoicePageContent({ paymentStatus }: { paymentStatus?: string | string
       </div>
     </div>
   );
-}
-
-function InvoiceCardWithRefetch() {
-  const { invoice } = useInvoiceRefetch();
-  
-  if (!invoice) {
-    return (
-      <div className="w-full max-w-4xl mx-auto p-8 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
-        <div className="animate-pulse">
-          <div className="h-8 bg-white/20 rounded mb-4"></div>
-          <div className="h-4 bg-white/10 rounded mb-2"></div>
-          <div className="h-4 bg-white/10 rounded"></div>
-        </div>
-      </div>
-    );
-  }
-
-  return <InvoiceCard invoice={invoice} />;
 }
