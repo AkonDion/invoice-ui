@@ -77,30 +77,55 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
           console.warn('🎉 Payment SUCCESS detected!')
           console.warn('🔍 Raw eventMessage:', event.data.eventMessage);
           
-          // Parse the eventMessage if it's a string
-          const messageData = typeof event.data.eventMessage === 'string' 
-            ? JSON.parse(event.data.eventMessage) 
-            : event.data.eventMessage;
+          // Normalize the eventMessage - handle both string and object cases
+          let normalizedMessage;
+          try {
+            // Parse if it's a string
+            const parsedMessage = typeof event.data.eventMessage === 'string' 
+              ? JSON.parse(event.data.eventMessage) 
+              : event.data.eventMessage;
 
-          console.warn('📦 Parsed payment response:', messageData);
-          
-          // The payment data structure from Helcim
-          // messageData.data contains the actual payment response with data and hash
-          const paymentData = messageData.data;
-          console.warn('📊 Payment data:', paymentData);
-          console.warn('📊 Payment data.data:', paymentData?.data);
-          console.warn('📊 Payment data.hash:', paymentData?.hash);
-          
-          // Check if we have the expected structure
-          if (!paymentData?.data || !paymentData?.hash) {
-            console.error('❌ Invalid payment data structure:', paymentData);
+            console.warn('📦 Parsed payment response:', parsedMessage);
+            
+            // Check if it's the HTTP-style wrapper and unwrap it
+            if (parsedMessage.data && parsedMessage.data.hash && parsedMessage.data.data) {
+              // It's the HTTP wrapper: { data: { hash, data }, status, ... }
+              normalizedMessage = {
+                hash: parsedMessage.data.hash,
+                data: parsedMessage.data.data
+              };
+              console.warn('📦 Unwrapped HTTP wrapper to normalized message:', normalizedMessage);
+            } else if (parsedMessage.hash && parsedMessage.data) {
+              // It's already normalized
+              normalizedMessage = parsedMessage;
+              console.warn('📦 Already normalized message:', normalizedMessage);
+            } else {
+              throw new Error('Invalid eventMessage shape - missing hash or data');
+            }
+          } catch (parseError) {
+            console.error('❌ Failed to parse/normalize eventMessage:', parseError);
             setError('Invalid payment response format');
             setIsLoading(false);
             return;
           }
           
+          // Validate the normalized structure
+          if (!normalizedMessage?.data || !normalizedMessage?.hash) {
+            console.error('❌ Invalid normalized message structure:', normalizedMessage);
+            setError('Invalid payment response format');
+            setIsLoading(false);
+            return;
+          }
+          
+          console.warn('✅ Normalized message validated:', {
+            hasData: !!normalizedMessage.data,
+            hasHash: !!normalizedMessage.hash,
+            dataKeys: Object.keys(normalizedMessage.data || {}),
+            hashLength: normalizedMessage.hash?.length
+          });
+          
           console.warn('🔐 Starting validation...')
-          validateResponse(event.data.eventMessage, currentCheckoutToken)
+          validateResponse(normalizedMessage, currentCheckoutToken)
             .then(response => {
               console.warn('📡 Validation response:', response.status)
               if (response.ok) {
@@ -116,7 +141,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
               console.warn('✅ Validation result:', result)
               if (result.success) {
                 console.warn('💾 Updating system values...')
-                return updateSystemValues(event.data.eventMessage)
+                return updateSystemValues(normalizedMessage)
               }
               throw new Error('Payment validation failed')
             })
@@ -148,19 +173,20 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       }
     }
 
-    // Helper function to validate the response - matching Helcim documentation exactly
-    function validateResponse(eventMessage: { data: { data: unknown; hash: string } }, checkoutToken: string) {
+    // Helper function to validate the response - using normalized message
+    function validateResponse(normalizedMessage: { data: unknown; hash: string }, checkoutToken: string) {
       console.warn('🔐 Validating response with payload:', {
-        hasData: !!eventMessage.data?.data,
-        hasHash: !!eventMessage.data?.hash,
+        hasData: !!normalizedMessage.data,
+        hasHash: !!normalizedMessage.hash,
         checkoutToken: checkoutToken?.substring(0, 8) + '...',
-        fullEventMessage: eventMessage
+        dataKeys: Object.keys(normalizedMessage.data || {}),
+        hashLength: normalizedMessage.hash?.length
       })
       
       const payload = {
-        'rawDataResponse': eventMessage.data.data,
+        'rawDataResponse': normalizedMessage.data,
         'checkoutToken': checkoutToken,
-        'hash': eventMessage.data.hash
+        'hash': normalizedMessage.hash
       }
       
       console.warn('📤 Sending validation payload:', {
@@ -179,14 +205,12 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       })
     }
 
-    // Helper function to update other system values - using original working format
-    async function updateSystemValues(paymentData: unknown) {
-      console.warn('💾 Updating system values with:', paymentData)
+    // Helper function to update other system values - using normalized message
+    async function updateSystemValues(normalizedMessage: { data: unknown; hash: string }) {
+      console.warn('💾 Updating system values with:', normalizedMessage)
       
-      // Parse the payment data structure
-      const messageData = typeof paymentData === 'string' ? JSON.parse(paymentData) : paymentData;
-      const messageObj = messageData as { data?: { data?: unknown } };
-      const transactionData = messageObj.data?.data || messageObj.data || messageData;
+      // The normalized message already has the transaction data in the data field
+      const transactionData = normalizedMessage.data;
       
       console.warn('📊 Transaction data:', transactionData)
       
