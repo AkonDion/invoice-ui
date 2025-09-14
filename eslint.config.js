@@ -4,6 +4,15 @@ import tsParser from '@typescript-eslint/parser';
 
 export default [
   {
+    ignores: [
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/*.config.{js,ts,mjs}',
+    ],
+  },
+  {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
       '@typescript-eslint': tsPlugin,
@@ -32,12 +41,5 @@ export default [
       '@next/next/no-img-element': 'warn',
       '@next/next/no-assign-module-variable': 'off'
     },
-    ignores: [
-      '**/node_modules/**',
-      '**/.next/**',
-      '**/dist/**',
-      '**/build/**',
-      '**/*.config.{js,ts,mjs}',
-    ],
   },
 ];

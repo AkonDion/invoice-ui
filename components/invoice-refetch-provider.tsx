@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { InvoicePayload } from '@/types/invoice'
+import { log } from '@/lib/logger'
 
 interface InvoiceRefetchContextType {
   invoice: InvoicePayload | null
@@ -32,7 +33,7 @@ export function InvoiceRefetchProvider({
       const response = await fetch(`/api/invoice/refetch?token=${encodeURIComponent(token)}`)
       
       if (!response.ok) {
-        console.error('Failed to refetch invoice:', response.statusText)
+        log.error('Failed to refetch invoice:', response.statusText)
         return
       }
 
@@ -40,19 +41,19 @@ export function InvoiceRefetchProvider({
       
       if (data.invoice) {
         // Debug: Log the received data
-        console.log('🔄 Refetch - Received invoice data:', {
+        log.debug('🔄 Refetch - Received invoice data:', {
           status: data.invoice.status,
           amountPaid: data.invoice.amountPaid,
           amountDue: data.invoice.amountDue,
           datePaid: data.invoice.datePaid
         })
         setInvoice(data.invoice)
-        console.log('✅ Invoice data refetched successfully')
+        log.debug('✅ Invoice data refetched successfully')
       } else {
-        console.error('No invoice data received from refetch')
+        log.error('No invoice data received from refetch')
       }
     } catch (error) {
-      console.error('❌ Error refetching invoice:', error)
+      log.error('❌ Error refetching invoice:', error)
     } finally {
       setIsLoading(false)
     }
