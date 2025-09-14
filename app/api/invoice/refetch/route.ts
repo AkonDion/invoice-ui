@@ -25,6 +25,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 })
     }
 
+    // Debug: Log the Supabase client configuration
+    console.warn('🔧 Refetch - Supabase client config:', {
+      url: supabaseUrl?.substring(0, 30) + '...',
+      hasServiceRole: !!supabaseServiceRole,
+      serviceRoleLength: supabaseServiceRole?.length
+    })
+
     // Fetch fresh invoice data
     const { data: invoiceData, error: invoiceError } = await supabase
       .from("invoices")
@@ -36,6 +43,17 @@ export async function GET(req: NextRequest) {
       console.error("Invoice refetch error:", invoiceError)
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
+
+    // Debug: Log the fresh data from database
+    console.warn('🔄 Refetch - Fresh invoice data from DB:', {
+      status: invoiceData.status,
+      amount_paid: invoiceData.amount_paid,
+      amount_due: invoiceData.amount_due,
+      date_paid: invoiceData.date_paid,
+      updated_at: invoiceData.updated_at,
+      invoice_id: invoiceData.invoice_id,
+      token: invoiceData.token
+    })
 
     // Fetch invoice items
     const { data: itemsData, error: itemsError } = await supabase
@@ -120,6 +138,15 @@ export async function GET(req: NextRequest) {
         date: invoiceData.pickup_date,
       },
     }
+
+    // Debug: Log the final response data
+    console.warn('📤 Refetch - Sending response:', {
+      status: invoice.status,
+      amountPaid: invoice.amountPaid,
+      amountDue: invoice.amountDue,
+      datePaid: invoice.datePaid,
+      invoiceId: invoice.invoiceId
+    })
 
     return NextResponse.json({ invoice })
 

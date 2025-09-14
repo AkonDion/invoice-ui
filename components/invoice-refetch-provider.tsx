@@ -39,6 +39,13 @@ export function InvoiceRefetchProvider({
       const data = await response.json()
       
       if (data.invoice) {
+        // Debug: Log the received data
+        console.log('🔄 Refetch - Received invoice data:', {
+          status: data.invoice.status,
+          amountPaid: data.invoice.amountPaid,
+          amountDue: data.invoice.amountDue,
+          datePaid: data.invoice.datePaid
+        })
         setInvoice(data.invoice)
         console.log('✅ Invoice data refetched successfully')
       } else {
@@ -53,10 +60,10 @@ export function InvoiceRefetchProvider({
 
   // Auto-refetch when component mounts (e.g., returning from success page)
   useEffect(() => {
-    // Small delay to ensure any server-side updates have propagated
+    // Longer delay to ensure payment processing has completed and database is updated
     const timer = setTimeout(() => {
       refetchInvoice()
-    }, 500)
+    }, 2000)
 
     return () => clearTimeout(timer)
   }, [token])
