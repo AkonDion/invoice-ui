@@ -87,14 +87,15 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         setError('Payment was cancelled or failed. Please try again.')
         setIsLoading(false)
         
-        // Redirect to error page for aborted payments
-        const errorParams = new URLSearchParams({
-          message: 'Payment was cancelled or failed',
-          code: 'PAYMENT_ABORTED',
-          invoiceNumber: invoice.invoiceNumber,
-          transactionId: 'Unknown'
-        })
-        window.location.href = `/error?${errorParams.toString()}`
+        // Redirect to error page for aborted payments - DISABLED
+        // const errorParams = new URLSearchParams({
+        //   message: 'Payment was cancelled or failed',
+        //   code: 'PAYMENT_ABORTED',
+        //   invoiceNumber: invoice.invoiceNumber,
+        //   transactionId: 'Unknown'
+        // })
+        // window.location.href = `/error?${errorParams.toString()}`
+        console.warn('Payment aborted - error redirect disabled')
         return
       }
 
@@ -207,45 +208,47 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             console.error('❌ Server validation failed:', json)
             setError('Payment validation failed. Please contact support.')
             
-            // Redirect to error page with user-friendly message
-            let userMessage = 'Payment verification failed. Please contact support.'
-            let errorCode = 'VALIDATION_FAILED'
+            // Redirect to error page with user-friendly message - DISABLED
+            // let userMessage = 'Payment verification failed. Please contact support.'
+            // let errorCode = 'VALIDATION_FAILED'
             
-            // Map technical server errors to user-friendly messages
-            if (json?.error) {
-              if (json.error.includes('checkout token')) {
-                userMessage = 'Payment session expired. Please try again.'
-                errorCode = 'SESSION_EXPIRED'
-              } else if (json.error.includes('signature')) {
-                userMessage = 'Payment verification failed. Please contact support.'
-                errorCode = 'SIGNATURE_INVALID'
-              } else if (json.error.includes('expired')) {
-                userMessage = 'Payment session expired. Please try again.'
-                errorCode = 'SESSION_EXPIRED'
-              }
-            }
+            // // Map technical server errors to user-friendly messages
+            // if (json?.error) {
+            //   if (json.error.includes('checkout token')) {
+            //     userMessage = 'Payment session expired. Please try again.'
+            //     errorCode = 'SESSION_EXPIRED'
+            //   } else if (json.error.includes('signature')) {
+            //     userMessage = 'Payment verification failed. Please contact support.'
+            //     errorCode = 'SIGNATURE_INVALID'
+            //   } else if (json.error.includes('expired')) {
+            //     userMessage = 'Payment session expired. Please try again.'
+            //     errorCode = 'SESSION_EXPIRED'
+            //   }
+            // }
             
-            const errorParams = new URLSearchParams({
-              message: userMessage,
-              code: errorCode,
-              invoiceNumber: invoice.invoiceNumber,
-              transactionId: (normalized.data.transactionId as string) || 'Unknown'
-            })
-            window.location.href = `/error?${errorParams.toString()}`
+            // const errorParams = new URLSearchParams({
+            //   message: userMessage,
+            //   code: errorCode,
+            //   invoiceNumber: invoice.invoiceNumber,
+            //   transactionId: (normalized.data.transactionId as string) || 'Unknown'
+            // })
+            // window.location.href = `/error?${errorParams.toString()}`
+            console.warn('Payment validation failed - error redirect disabled')
           })
           .catch((err) => {
             // Network/runtime issues (was your earlier "Failed to fetch")
             console.error('❌ Payment validation network error:', err)
             setError('Could not verify payment. Please refresh or contact support.')
             
-            // Redirect to error page with network error details
-            const errorParams = new URLSearchParams({
-              message: 'Network error during payment verification',
-              code: 'NETWORK_ERROR',
-              invoiceNumber: invoice.invoiceNumber,
-              transactionId: 'Unknown'
-            })
-            window.location.href = `/error?${errorParams.toString()}`
+            // Redirect to error page with network error details - DISABLED
+            // const errorParams = new URLSearchParams({
+            //   message: 'Network error during payment verification',
+            //   code: 'NETWORK_ERROR',
+            //   invoiceNumber: invoice.invoiceNumber,
+            //   transactionId: 'Unknown'
+            // })
+            // window.location.href = `/error?${errorParams.toString()}`
+            console.warn('Payment network error - error redirect disabled')
           })
           .finally(() => {
             setIsValidating(false)
