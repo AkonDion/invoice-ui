@@ -106,6 +106,7 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
       date: invoiceData.pickup_date,
     },
     invoiceUrl: invoiceData.invoice_url,
+    receiptUrl: invoiceData.receipt_url,
   };
 
   return invoice;

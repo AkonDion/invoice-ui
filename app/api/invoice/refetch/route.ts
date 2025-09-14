@@ -137,6 +137,8 @@ export async function GET(req: NextRequest) {
         name: invoiceData.pickup_name,
         date: invoiceData.pickup_date,
       },
+      invoiceUrl: invoiceData.invoice_url,
+      receiptUrl: invoiceData.receipt_url,
     }
 
     // Debug: Log the final response data

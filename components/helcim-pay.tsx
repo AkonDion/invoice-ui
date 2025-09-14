@@ -426,11 +426,23 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   }
 
   if (isPaid(invoice)) {
+    const downloadReceipt = () => {
+      if (!invoice.receiptUrl) {
+        console.warn('Receipt download URL not available')
+        return
+      }
+      window.open(invoice.receiptUrl, '_blank')
+    }
+
     return (
       <div className={`p-4 rounded-2xl bg-green-500/20 backdrop-blur-md border border-green-400/30 ${className}`}>
         <div className="text-center">
           <div className="text-green-100 font-semibold mb-2">Invoice Paid</div>
-          <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20 rounded-2xl">
+          <Button 
+            variant="outline" 
+            className="bg-white/10 border-white/30 text-white hover:bg-white/20 rounded-2xl"
+            onClick={downloadReceipt}
+          >
             Download Receipt
           </Button>
         </div>
