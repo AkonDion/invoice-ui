@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { log } from '@/lib/logger';
 
 // Ensure Node runtime and no static caching
 export const runtime = 'nodejs'
@@ -10,7 +11,7 @@ const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!supabaseUrl || !supabaseServiceRole) {
-  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+  log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceRole);
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     
     // Validate required fields
     if (!invoice || !invoice.amount || !invoice.currency) {
-      console.error('Missing invoice data in Helcim initialization request');
+      log.error('Missing invoice data in Helcim initialization request');
       return NextResponse.json(
         { error: 'Invoice data is required' },
         { status: 400 }
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // Validate environment variables
     if (!process.env.HELCIM_API_TOKEN) {
-      console.error('Helcim API token not configured');
+      log.error('Helcim API token not configured');
       return NextResponse.json(
         { error: 'Helcim API token not configured' },
         { status: 500 }
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log successful initialization
-    console.warn('✅ Payment initialized:', JSON.stringify({
+    log.info('✅ Payment initialized:', JSON.stringify({
       event: 'payment_initialization_success',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (storeError) {
-      console.error('Failed to store Helcim tokens:', storeError);
+      log.error('Failed to store Helcim tokens:', storeError);
       return NextResponse.json(
         { error: 'Failed to store payment tokens' },
         { status: 500 }
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
       checkoutToken: data.checkoutToken,
     });
   } catch (error) {
-    console.error('Payment initialization error:', error);
+    log.error('Payment initialization error:', error);
     return NextResponse.json(
       { error: `Payment initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }

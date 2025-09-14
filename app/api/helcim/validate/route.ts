@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
+import { log } from '@/lib/logger'
 
 // Ensure Node runtime (crypto) and no static caching
 export const runtime = 'nodejs'
@@ -11,7 +12,7 @@ const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseServiceRole) {
-  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+  log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
 }
 
 const supabase = createClient(supabaseUrl!, supabaseServiceRole!)
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (tokenErr || !tokenRow) {
-      console.error('Secret token lookup failed:', tokenErr || 'no row')
+      log.error('Secret token lookup failed:', tokenErr || 'no row')
       return NextResponse.json({ 
         success: false, 
         error: 'Invalid or unknown checkout token' 
@@ -142,10 +143,10 @@ export async function POST(req: NextRequest) {
         response_data: rawDataResponse
       })
       if (insertErr) {
-        console.error('Insert payment_transactions error:', insertErr)
+        log.error('Insert payment_transactions error:', insertErr)
       }
     } catch (e) {
-      console.error('Unexpected insert error:', e)
+      log.error('Unexpected insert error:', e)
     }
 
     // Structured log
@@ -177,7 +178,7 @@ export async function POST(req: NextRequest) {
         : (rawDataResponse as HelcimCCResponse).status
     })
   } catch (error) {
-    console.error('Unexpected error in validation route:', error)
+    log.error('Unexpected error in validation route:', error)
     return NextResponse.json({
       success: false,
       error: 'Internal server error during validation'

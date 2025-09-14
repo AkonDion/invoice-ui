@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { InvoicePayload } from '@/types/invoice'
+import { log } from '@/lib/logger'
 
 // Ensure Node runtime and no static caching
 export const runtime = 'nodejs'
@@ -11,7 +12,7 @@ const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseServiceRole) {
-  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+  log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
 }
 
 const supabase = createClient(supabaseUrl!, supabaseServiceRole!)
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Debug: Log the Supabase client configuration
-    console.warn('🔧 Refetch - Supabase client config:', {
+    log.debug('🔧 Refetch - Supabase client config:', {
       url: supabaseUrl?.substring(0, 30) + '...',
       hasServiceRole: !!supabaseServiceRole,
       serviceRoleLength: supabaseServiceRole?.length
@@ -40,12 +41,12 @@ export async function GET(req: NextRequest) {
       .single()
 
     if (invoiceError || !invoiceData) {
-      console.error("Invoice refetch error:", invoiceError)
+      log.error("Invoice refetch error:", invoiceError)
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
     // Debug: Log the fresh data from database
-    console.warn('🔄 Refetch - Fresh invoice data from DB:', {
+    log.debug('🔄 Refetch - Fresh invoice data from DB:', {
       status: invoiceData.status,
       amount_paid: invoiceData.amount_paid,
       amount_due: invoiceData.amount_due,
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest) {
       .order("line_index")
 
     if (itemsError || !itemsData) {
-      console.error("Invoice items refetch error:", itemsError)
+      log.error("Invoice items refetch error:", itemsError)
       return NextResponse.json({ error: 'Invoice items not found' }, { status: 404 })
     }
 
@@ -142,7 +143,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Debug: Log the final response data
-    console.warn('📤 Refetch - Sending response:', {
+    log.debug('📤 Refetch - Sending response:', {
       status: invoice.status,
       amountPaid: invoice.amountPaid,
       amountDue: invoice.amountDue,
@@ -153,7 +154,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ invoice })
 
   } catch (error) {
-    console.error('Unexpected error in refetch route:', error)
+    log.error('Unexpected error in refetch route:', error)
     return NextResponse.json({
       error: 'Internal server error during invoice refetch'
     }, { status: 500 })

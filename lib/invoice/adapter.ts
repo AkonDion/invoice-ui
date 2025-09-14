@@ -1,5 +1,5 @@
-import { z } from "zod"
 import { invoicePayloadSchema, invoicesArraySchema, type InvoicePayload } from "@/types/invoice"
+import { log } from '@/lib/logger'
 
 /**
  * Normalizes raw invoice data from the API and validates it with Zod
@@ -22,7 +22,7 @@ export function normalizeInvoice(raw: unknown): InvoicePayload {
     const error = arrayResult.error || singleResult.error
     throw new Error(`Invalid invoice data: ${error?.message}`)
   } catch (error) {
-    console.error("Failed to normalize invoice:", error)
+    log.error("Failed to normalize invoice:", error)
     throw new Error(`Invalid invoice data: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }

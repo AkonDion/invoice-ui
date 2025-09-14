@@ -2,6 +2,7 @@ import type { InvoicePayload } from "@/types/invoice";
 import { createClient } from "@supabase/supabase-js";
 import { InvoiceRefetchProvider } from "@/components/invoice-refetch-provider";
 import { InvoiceCardWithRefetch } from "@/components/invoice-card-with-refetch";
+import { log } from '@/lib/logger';
 
 interface InvoicePageProps {
   params: { token: string };
@@ -21,7 +22,7 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
     .single();
 
   if (invoiceError || !invoiceData) {
-    console.error("Invoice fetch error:", invoiceError);
+    log.error("Invoice fetch error:", invoiceError);
     throw new Error("Unable to load invoice");
   }
 
@@ -32,7 +33,7 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
     .order("line_index");
 
   if (itemsError || !itemsData) {
-    console.error("Invoice items fetch error:", itemsError);
+    log.error("Invoice items fetch error:", itemsError);
     throw new Error("Unable to load invoice items");
   }
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url });
 
   } catch (error) {
-    console.error('Error processing invoice:', error);
+    log.error('Error processing invoice:', error);
     return NextResponse.json(
       { error: 'Failed to process invoice' },
       { status: 500 }

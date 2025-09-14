@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { log } from '@/lib/logger'
 
 // Ensure Node runtime and no static caching
 export const runtime = 'nodejs'
@@ -10,7 +11,7 @@ const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseServiceRole) {
-  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+  log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
 }
 
 const supabase = createClient(supabaseUrl!, supabaseServiceRole!)
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (fetchError || !invoice) {
-      console.error('Invoice lookup failed:', fetchError || 'no invoice found')
+      log.error('Invoice lookup failed:', fetchError || 'no invoice found')
       return NextResponse.json({
         success: false,
         error: 'Invoice not found'
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (updateError) {
-      console.error('Invoice update failed:', updateError)
+      log.error('Invoice update failed:', updateError)
       return NextResponse.json({
         success: false,
         error: 'Failed to update invoice status'
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log the successful update
-    console.warn('Invoice status updated:', {
+    log.info('Invoice status updated:', {
       invoiceNumber,
       oldStatus: invoice.status,
       newStatus: status,
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Unexpected error in update-status route:', error)
+    log.error('Unexpected error in update-status route:', error)
     return NextResponse.json({
       success: false,
       error: 'Internal server error during invoice update'

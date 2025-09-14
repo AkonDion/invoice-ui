@@ -6,6 +6,7 @@ import { Loader2, CreditCard } from 'lucide-react'
 import { money } from '@/lib/invoice/adapter'
 import type { InvoicePayload } from '@/types/invoice'
 import { isPaid } from '@/types/invoice'
+import { log } from '@/lib/logger'
 
 interface HelcimPayProps {
   invoice: InvoicePayload
@@ -39,7 +40,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     script.async = true
     script.onload = () => setIsInitialized(true)
     script.onerror = (err) => {
-      console.error('Failed to load HelcimPay script:', err)
+      log.error('Failed to load HelcimPay script:', err)
       setError('Failed to load HelcimPay script. Please check your internet connection.')
     }
     document.head.appendChild(script)
@@ -68,7 +69,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       }
 
       // Debug
-      console.warn('🔍 Received message event:', {
+      log.debug('🔍 Received message event:', {
         origin: event.origin,
         eventName,
         eventStatus,
@@ -80,10 +81,10 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       // Only enforce token match for transactional statuses
       if (eventName !== expectedEventName) return
 
-      console.warn('✅ Event matches our checkout token!')
+      log.debug('✅ Event matches our checkout token!')
 
       if (eventStatus === 'ABORTED') {
-        console.error('Transaction aborted/failed:', eventMessage)
+        log.error('Transaction aborted/failed:', eventMessage)
         setError('Payment was cancelled or failed. Please try again.')
         setIsLoading(false)
         
@@ -95,23 +96,23 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         //   transactionId: 'Unknown'
         // })
         // window.location.href = `/error?${errorParams.toString()}`
-        console.warn('Payment aborted - error redirect disabled')
+        log.warn('Payment aborted - error redirect disabled')
         return
       }
 
       if (eventStatus === 'HIDE') {
-        console.warn('👋 Modal closed')
+        log.debug('👋 Modal closed')
         setIsLoading(false)
         return
       }
 
       if (eventStatus === 'SUCCESS') {
-        console.warn('🎉 Payment SUCCESS detected!')
-        console.warn('🔍 Raw eventMessage:', eventMessage)
+        log.debug('🎉 Payment SUCCESS detected!')
+        log.debug('🔍 Raw eventMessage:', eventMessage)
 
         // In-flight guard to prevent double validation
         if (isValidating) {
-          console.warn('⚠️ Validation already in progress, ignoring duplicate SUCCESS event')
+          log.debug('⚠️ Validation already in progress, ignoring duplicate SUCCESS event')
           return
         }
 
@@ -132,7 +133,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
               hash: ((parsed as Record<string, unknown>).data as Record<string, unknown>).hash as string,
               data: ((parsed as Record<string, unknown>).data as Record<string, unknown>).data as Record<string, unknown>
             }
-            console.warn('📦 Unwrapped HTTP wrapper to normalized message:', normalized)
+            log.debug('📦 Unwrapped HTTP wrapper to normalized message:', normalized)
           } else if (
             parsed &&
             typeof parsed === 'object' &&
@@ -140,25 +141,25 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             (parsed as Record<string, unknown>).data
           ) {
             normalized = parsed as { hash: string; data: Record<string, unknown> }
-            console.warn('📦 Already normalized message:', normalized)
+            log.debug('📦 Already normalized message:', normalized)
           } else {
             throw new Error('Invalid eventMessage shape - missing hash or data')
           }
         } catch (err) {
-          console.error('❌ Failed to parse/normalize eventMessage:', err)
+          log.error('❌ Failed to parse/normalize eventMessage:', err)
           setError('Invalid payment response format')
           setIsLoading(false)
           return
         }
 
         if (!normalized.hash || !normalized.data) {
-          console.error('❌ Invalid normalized message structure:', normalized)
+          log.error('❌ Invalid normalized message structure:', normalized)
           setError('Invalid payment response format')
           setIsLoading(false)
           return
         }
 
-        console.warn('✅ Normalized message validated:', {
+        log.debug('✅ Normalized message validated:', {
           hasData: !!normalized.data,
           hasHash: !!normalized.hash,
           dataKeys: Object.keys(normalized.data),
@@ -167,17 +168,17 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
         // Set validating flag and validate server-side (secretToken lookup)
         setIsValidating(true)
-        console.warn('🔐 Starting validation...')
+        log.debug('🔐 Starting validation...')
         validateResponse(normalized, currentCheckoutToken)
           .then(async (res) => {
-            console.warn('📡 Validation HTTP status:', res.status)
+            log.debug('📡 Validation HTTP status:', res.status)
             const json = await res.json().catch(() => ({}))
-            console.warn('✅ Validation result payload:', json)
+            log.debug('✅ Validation result payload:', json)
 
             if (res.ok && json?.success) {
-              console.warn('💾 Updating system values…')
+              log.debug('💾 Updating system values…')
               await updateSystemValues(normalized)
-              console.warn('🚀 Redirecting to success page…')
+              log.debug('🚀 Redirecting to success page…')
               
               // Build success page URL with transaction details
               const tx = normalized.data as Record<string, unknown> & { 
@@ -205,7 +206,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             }
 
             // Validation explicitly failed
-            console.error('❌ Server validation failed:', json)
+            log.error('❌ Server validation failed:', json)
             setError('Payment validation failed. Please contact support.')
             
             // Redirect to error page with user-friendly message - DISABLED
@@ -233,11 +234,11 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             //   transactionId: (normalized.data.transactionId as string) || 'Unknown'
             // })
             // window.location.href = `/error?${errorParams.toString()}`
-            console.warn('Payment validation failed - error redirect disabled')
+            log.warn('Payment validation failed - error redirect disabled')
           })
           .catch((err) => {
             // Network/runtime issues (was your earlier "Failed to fetch")
-            console.error('❌ Payment validation network error:', err)
+            log.error('❌ Payment validation network error:', err)
             setError('Could not verify payment. Please refresh or contact support.')
             
             // Redirect to error page with network error details - DISABLED
@@ -248,7 +249,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             //   transactionId: 'Unknown'
             // })
             // window.location.href = `/error?${errorParams.toString()}`
-            console.warn('Payment network error - error redirect disabled')
+            log.warn('Payment network error - error redirect disabled')
           })
           .finally(() => {
             setIsValidating(false)
@@ -261,7 +262,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   }, [currentCheckoutToken, invoice.token])
 
   function validateResponse(normalizedMessage: { data: Record<string, unknown>; hash: string }, checkoutToken: string) {
-    console.warn('🔐 Validating response with payload:', {
+    log.debug('🔐 Validating response with payload:', {
       hasData: !!normalizedMessage.data,
       hasHash: !!normalizedMessage.hash,
       checkoutToken: checkoutToken?.substring(0, 8) + '...',
@@ -275,7 +276,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       hash: normalizedMessage.hash
     }
 
-    console.warn('📤 Sending validation payload:', {
+    log.debug('📤 Sending validation payload:', {
       hasRawData: !!payload.rawDataResponse,
       hasCheckoutToken: !!payload.checkoutToken,
       hasHash: !!payload.hash
@@ -336,7 +337,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
           }
         }
 
-        console.warn('💳 Payment status mapping:', {
+        log.debug('💳 Payment status mapping:', {
           paymentType: isACH ? 'ACH' : 'CREDIT_CARD',
           paymentStatus,
           invoiceStatus
@@ -351,13 +352,13 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
             transactionId: tx.transactionId
           })
         })
-        if (!res.ok) console.error('❌ Failed to update invoice status:', await res.text())
-        else console.warn('✅ Invoice status updated to:', invoiceStatus)
+        if (!res.ok) log.error('❌ Failed to update invoice status:', await res.text())
+        else log.debug('✅ Invoice status updated to:', invoiceStatus)
       } catch (e) {
-        console.error('❌ Error updating invoice status:', e)
+        log.error('❌ Error updating invoice status:', e)
       }
     } else {
-      console.warn('⚠️ Missing invoice data for system update:', {
+      log.warn('⚠️ Missing invoice data for system update:', {
         invoiceNumber: tx.invoiceNumber,
         transactionId: tx.transactionId,
         availableKeys: Object.keys(normalizedMessage.data || {})
@@ -405,7 +406,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
 
       const data = await response.json()
       if (!response.ok || !data?.checkoutToken) {
-        console.error('Payment initialization failed:', data)
+        log.error('Payment initialization failed:', data)
         throw new Error(data?.error || 'Failed to initialize payment')
       }
 
@@ -414,11 +415,11 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
       try {
         window.appendHelcimPayIframe(data.checkoutToken)
       } catch (iframeError) {
-        console.error('HelcimPay iframe error:', iframeError)
+        log.error('HelcimPay iframe error:', iframeError)
         throw new Error('Unable to open payment modal. Please try again.')
       }
     } catch (err: unknown) {
-      console.error('Payment initialization error:', err)
+      log.error('Payment initialization error:', err)
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
       setIsLoading(false)
@@ -428,7 +429,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
   if (isPaid(invoice)) {
     const downloadReceipt = () => {
       if (!invoice.receiptUrl) {
-        console.warn('Receipt download URL not available')
+        log.warn('Receipt download URL not available')
         return
       }
       window.open(invoice.receiptUrl, '_blank')
