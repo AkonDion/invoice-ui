@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { log } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Error processing request:', error);
+    log.error('Error processing request:', error);
     return Response.json(
       { error: 'Failed to process request' }, 
       { status: 500 }

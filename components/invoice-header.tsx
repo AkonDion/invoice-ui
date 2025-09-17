@@ -1,6 +1,6 @@
 "use client"
 
-import { Download, Building2 } from "lucide-react"
+import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/status-badge"
 import type { InvoicePayload } from "@/types/invoice"
