@@ -37,8 +37,8 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
         p-4 rounded-2xl border transition-all duration-200 cursor-pointer h-full flex flex-col relative
         ${isRoutineMaintenance 
           ? isSelected
-            ? 'bg-gradient-to-br from-[#FFD700]/20 to-[#FFA500]/20 border-[#FFD700]/60 shadow-xl shadow-[#FFD700]/20 ring-2 ring-[#FFD700]/30' 
-            : 'bg-gradient-to-br from-[#FFD700]/10 to-[#FFA500]/10 border-[#FFD700]/40 shadow-lg shadow-[#FFD700]/10 hover:bg-gradient-to-br hover:from-[#FFD700]/15 hover:to-[#FFA500]/15 hover:border-[#FFD700]/50 hover:shadow-xl hover:shadow-[#FFD700]/15'
+            ? 'bg-gradient-to-br from-[#8B5CF6]/30 to-[#A855F7]/30 border-[#8B5CF6]/70 shadow-xl shadow-[#8B5CF6]/25 ring-2 ring-[#8B5CF6]/40' 
+            : 'bg-gradient-to-br from-[#8B5CF6]/15 to-[#A855F7]/15 border-[#8B5CF6]/50 shadow-lg shadow-[#8B5CF6]/15 hover:bg-gradient-to-br hover:from-[#8B5CF6]/20 hover:to-[#A855F7]/20 hover:border-[#8B5CF6]/60 hover:shadow-xl hover:shadow-[#8B5CF6]/20'
           : isSelected 
             ? 'bg-[#00D6AF]/20 border-[#00D6AF]/40 shadow-lg shadow-[#00D6AF]/10' 
             : 'bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:border-white/30'
@@ -56,11 +56,11 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
         
         {/* Service Name */}
         <div className="flex items-start justify-between">
-          <h4 className={`font-semibold text-lg leading-tight ${isRoutineMaintenance ? 'text-[#FFD700]' : 'text-white'}`}>
+          <h4 className={`font-semibold text-lg leading-tight ${isRoutineMaintenance ? 'text-white' : 'text-white'}`}>
             {service.name}
           </h4>
           {isSelected && (
-            <CheckCircle className={`h-5 w-5 flex-shrink-0 ml-2 ${isRoutineMaintenance ? 'text-[#FFD700]' : 'text-green-400'}`} />
+            <CheckCircle className={`h-5 w-5 flex-shrink-0 ml-2 ${isRoutineMaintenance ? 'text-white' : 'text-green-400'}`} />
           )}
         </div>
 
@@ -126,8 +126,8 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
             w-full mt-auto px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer
             ${isRoutineMaintenance
               ? isSelected 
-                ? 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFD700]/90 hover:to-[#FFA500]/90 text-black border-0 shadow-lg font-bold' 
-                : 'bg-gradient-to-r from-[#FFD700]/20 to-[#FFA500]/20 hover:from-[#FFD700]/30 hover:to-[#FFA500]/30 text-[#FFD700] border border-[#FFD700]/40 hover:border-[#FFD700]/60 font-semibold'
+                ? 'bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] hover:from-[#8B5CF6]/90 hover:to-[#A855F7]/90 text-white border-0 shadow-lg font-bold' 
+                : 'bg-white/20 backdrop-blur-sm border border-[#8B5CF6]/60 text-white hover:bg-[#8B5CF6]/20 hover:border-[#8B5CF6]/80 font-semibold'
               : isSelected 
                 ? 'bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white border-0 shadow-lg' 
                 : 'bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-white/30'

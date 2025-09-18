@@ -3,43 +3,29 @@ import { calendarAvailabilitySchema, CalendarBookingType, CalendarSlot } from '@
 
 const CALENDAR_WEBHOOK_URL = 'https://nodechain.dev/webhook/4905f161-d220-4ea5-91cc-9b64f159e924';
 
-// Convert timezone from +04:00 to Toronto time (EDT/EST)
+// Convert UTC times to Toronto timezone
 function convertToTorontoTime(slot: CalendarSlot): CalendarSlot {
-  // Parse the start and end times
+  // Parse the UTC times
   const startDate = new Date(slot.start);
   const endDate = new Date(slot.end);
   
-  // Convert from UTC to Toronto time
-  // Toronto is UTC-4 (EDT) or UTC-5 (EST)
-  // Since we're in September, it's EDT (UTC-4)
-  // Original: 08:00:00.000Z (UTC) = 4:00 AM EDT, but we want 8:00 AM EDT
-  // So we need to add 4 hours to get 8:00 AM - 4:00 PM EDT
-  const offsetDifference = 4 * 60; // +4 hours in minutes
+  // The webhook returns times that should be treated as Toronto local time
+  // but they're marked as UTC. We need to add 4 hours to get the correct UTC time
+  // that when converted to Toronto time will show the correct local time.
+  const torontoOffset = 4 * 60; // +4 hours in minutes
   
-  // Apply the offset
-  const torontoStart = new Date(startDate.getTime() + (offsetDifference * 60 * 1000));
-  const torontoEnd = new Date(endDate.getTime() + (offsetDifference * 60 * 1000));
+  // Apply the offset to convert from "fake UTC" to real UTC
+  const realUtcStart = new Date(startDate.getTime() + (torontoOffset * 60 * 1000));
+  const realUtcEnd = new Date(endDate.getTime() + (torontoOffset * 60 * 1000));
   
-  // Format back to ISO string with Toronto timezone
-  const formatToTorontoISO = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    
-    // Determine if it's EDT or EST based on the date
-    // For simplicity, we'll use EDT (-04:00) for now
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}-04:00`;
-  };
-  
+  // Format back to ISO string
   return {
     ...slot,
-    start: formatToTorontoISO(torontoStart),
-    end: formatToTorontoISO(torontoEnd),
+    start: realUtcStart.toISOString(),
+    end: realUtcEnd.toISOString(),
   };
 }
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,7 +58,7 @@ export async function POST(request: NextRequest) {
     // Validate the response data
     const validatedData = calendarAvailabilitySchema.parse(data);
 
-    // Convert timezone to Toronto time
+    // Convert UTC times to Toronto timezone
     const convertedData = validatedData.map(convertToTorontoTime);
 
     return NextResponse.json({
@@ -128,7 +114,7 @@ export async function GET(request: NextRequest) {
     // Validate the response data
     const validatedData = calendarAvailabilitySchema.parse(data);
 
-    // Convert timezone to Toronto time
+    // Convert UTC times to Toronto timezone
     const convertedData = validatedData.map(convertToTorontoTime);
 
     return NextResponse.json({
