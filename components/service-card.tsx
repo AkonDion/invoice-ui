@@ -23,6 +23,9 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
     ? service.description.substring(0, DESCRIPTION_LIMIT) + '...'
     : service.description;
 
+  // Check if this is the "Routine System Maintenance" service for enhanced styling
+  const isRoutineMaintenance = service.name.toLowerCase().includes('routine system maintenance');
+
   const handleExpandClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsExpanded(!isExpanded);
@@ -31,22 +34,33 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
   return (
     <div 
       className={`
-        p-4 rounded-2xl border transition-all duration-200 cursor-pointer h-full flex flex-col
-        ${isSelected 
-          ? 'bg-[#00D6AF]/20 border-[#00D6AF]/40 shadow-lg shadow-[#00D6AF]/10' 
-          : 'bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:border-white/30'
+        p-4 rounded-2xl border transition-all duration-200 cursor-pointer h-full flex flex-col relative
+        ${isRoutineMaintenance 
+          ? isSelected
+            ? 'bg-gradient-to-br from-[#FFD700]/20 to-[#FFA500]/20 border-[#FFD700]/60 shadow-xl shadow-[#FFD700]/20 ring-2 ring-[#FFD700]/30' 
+            : 'bg-gradient-to-br from-[#FFD700]/10 to-[#FFA500]/10 border-[#FFD700]/40 shadow-lg shadow-[#FFD700]/10 hover:bg-gradient-to-br hover:from-[#FFD700]/15 hover:to-[#FFA500]/15 hover:border-[#FFD700]/50 hover:shadow-xl hover:shadow-[#FFD700]/15'
+          : isSelected 
+            ? 'bg-[#00D6AF]/20 border-[#00D6AF]/40 shadow-lg shadow-[#00D6AF]/10' 
+            : 'bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:border-white/30'
         }
       `}
       onClick={onToggle}
     >
       <div className="space-y-3 flex-1 flex flex-col">
+        {/* Best Value Badge for Routine Maintenance */}
+        {isRoutineMaintenance && (
+          <div className="absolute -top-2 -right-2 bg-white/20 backdrop-blur-md border border-white/30 text-white/90 text-xs font-medium px-3 py-1 rounded-full shadow-lg">
+            BEST VALUE
+          </div>
+        )}
+        
         {/* Service Name */}
         <div className="flex items-start justify-between">
-          <h4 className="font-semibold text-white text-lg leading-tight">
+          <h4 className={`font-semibold text-lg leading-tight ${isRoutineMaintenance ? 'text-[#FFD700]' : 'text-white'}`}>
             {service.name}
           </h4>
           {isSelected && (
-            <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0 ml-2" />
+            <CheckCircle className={`h-5 w-5 flex-shrink-0 ml-2 ${isRoutineMaintenance ? 'text-[#FFD700]' : 'text-green-400'}`} />
           )}
         </div>
 
@@ -110,9 +124,13 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
           }}
           className={`
             w-full mt-auto px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer
-            ${isSelected 
-              ? 'bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white border-0 shadow-lg' 
-              : 'bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-white/30'
+            ${isRoutineMaintenance
+              ? isSelected 
+                ? 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFD700]/90 hover:to-[#FFA500]/90 text-black border-0 shadow-lg font-bold' 
+                : 'bg-gradient-to-r from-[#FFD700]/20 to-[#FFA500]/20 hover:from-[#FFD700]/30 hover:to-[#FFA500]/30 text-[#FFD700] border border-[#FFD700]/40 hover:border-[#FFD700]/60 font-semibold'
+              : isSelected 
+                ? 'bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white border-0 shadow-lg' 
+                : 'bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-white/30'
             }
           `}
         >

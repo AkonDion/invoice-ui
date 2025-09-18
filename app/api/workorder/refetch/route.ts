@@ -106,9 +106,9 @@ export async function GET(req: NextRequest) {
       workOrderName: workOrderSession.work_order_name,
       status: workOrderSession.status,
       type: workOrderSession.work_order_type || '',
-      grandTotal: parseFloat(workOrderSession.grand_total || '0'),
-      subTotal: parseFloat(workOrderSession.sub_total || '0'),
-      taxAmount: parseFloat(workOrderSession.tax_amount || '0'),
+      grandTotal: parseFloat(workOrderSession.grand_total || '0') || 0,
+      subTotal: parseFloat(workOrderSession.sub_total || '0') || 0,
+      taxAmount: parseFloat(workOrderSession.tax_amount || '0') || 0,
       billingStatus: workOrderSession.billing_status || '',
       quickbooksInvoiceId: workOrderSession.quickbooks_invoice_id || '',
       quickbooksInvoiceNumber: workOrderSession.quickbooks_invoice_number || '',
@@ -142,14 +142,23 @@ export async function GET(req: NextRequest) {
       scheduled_date: workOrderSession.scheduled_date ?? undefined
     };
 
+    // Calculate duration based on work order type
+    const typeDurations: Record<string, number> = {
+      'Installation': 480, // 8 hours
+      'Maintenance': 120,  // 2 hours
+      'Repair': 240,       // 4 hours
+      'Inspection': 60,    // 1 hour
+    };
+    const totalDuration = typeDurations[workOrder.type] || 480; // Default 8 hours
+
     const workOrderPayload = {
       token: workOrderSession.token,
       workOrder,
       status: workOrderSession.status,
       scheduledDate: workOrderSession.scheduled_date || undefined,
       notes: workOrderSession.notes || undefined,
-      totalAmount: workOrder.grandTotal,
-      totalDuration: 480, // Default 8 hours for installation
+      totalAmount: workOrder.grandTotal || 0,
+      totalDuration,
       expiresAt: workOrderSession.expires_at
     };
 

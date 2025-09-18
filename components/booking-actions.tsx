@@ -173,8 +173,8 @@ export function BookingActions({
         <h3 className="text-lg font-semibold text-white">Ready to Schedule?</h3>
         <p className="text-white/80 text-sm">
           {selectedServices.length > 0 
-            ? `You've selected ${selectedServices.length} service${selectedServices.length > 1 ? 's' : ''} for $${totalAmount.toFixed(2)}`
-            : 'Select services above to continue'
+            ? `You've selected ${selectedServices[0].name} for $${totalAmount.toFixed(2)}`
+            : 'Select a service above to continue'
           }
         </p>
       </div>

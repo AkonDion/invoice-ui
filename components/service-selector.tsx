@@ -27,7 +27,7 @@ export function ServiceSelector({
           <h3 className="font-semibold text-white text-sm">Available Services</h3>
         </div>
         <div className="text-white/60 text-xs">
-          {selectedServices.length} of {services.length} selected
+          {selectedServices.length > 0 ? '1 service selected' : 'No service selected'}
         </div>
       </div>
 

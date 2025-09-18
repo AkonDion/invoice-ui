@@ -12,9 +12,10 @@ interface WorkOrderCardProps {
 }
 
 export function WorkOrderCard({ workOrder, workOrderStatus }: WorkOrderCardProps) {
-  // Calculate totals for work order
-  const totalAmount = workOrder.workOrder.grandTotal;
-  const totalDuration = 480; // Default 8 hours for work orders
+  // Calculate totals for work order with proper fallbacks
+  // Use the totalAmount from the payload first, then fall back to workOrder.grandTotal
+  const totalAmount = workOrder.totalAmount || workOrder.workOrder.grandTotal || 0;
+  const totalDuration = workOrder.totalDuration || 480; // Use provided duration or default 8 hours
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl">
@@ -35,6 +36,8 @@ export function WorkOrderCard({ workOrder, workOrderStatus }: WorkOrderCardProps
         {/* Actions */}
         <WorkOrderActions
           workOrder={workOrder.workOrder}
+          totalAmount={totalAmount}
+          totalDuration={totalDuration}
           workOrderStatus={workOrderStatus}
           workOrderToken={workOrder.token}
           isScheduled={workOrder.status === 'SCHEDULED'}

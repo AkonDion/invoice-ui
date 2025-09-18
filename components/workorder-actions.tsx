@@ -212,7 +212,7 @@ export function WorkOrderActions({
       <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center space-y-2">
         <h3 className="text-lg font-semibold text-white">Ready to Schedule?</h3>
         <p className="text-white/80 text-sm">
-          Work Order: {workOrder.workOrderName} - {formatCurrency(totalAmount)}
+          Work Order: {workOrder.workOrderName} - {formatCurrency(totalAmount || 0)}
         </p>
       </div>
 
@@ -262,7 +262,10 @@ export function WorkOrderActions({
 
       {/* Work Order Info */}
       <div className="text-center text-sm text-white/60 space-y-1">
-        <p>Estimated duration: {Math.ceil(totalDuration / 60)} hours</p>
+        <div className="flex items-center justify-center gap-2">
+          <Clock className="w-4 h-4 text-white/70" />
+          <span>Estimated Duration: {Math.ceil((totalDuration || 0) / 60)} hours</span>
+        </div>
         <p>You'll receive an email confirming your appointment details</p>
       </div>
     </div>

@@ -20,11 +20,11 @@ export function BookingCard({ booking, bookingStatus }: BookingCardProps) {
     let newSelectedServices: Service[];
 
     if (isSelected) {
-      // Remove service
+      // Remove service (deselect)
       newSelectedServices = selectedServices.filter(s => s.id !== service.id);
     } else {
-      // Add service
-      newSelectedServices = [...selectedServices, service];
+      // Add service and remove any previously selected service (single selection)
+      newSelectedServices = [service];
     }
 
     setSelectedServices(newSelectedServices);
