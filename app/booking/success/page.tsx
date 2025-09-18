@@ -26,7 +26,7 @@ function SuccessContent() {
         <div className="w-full max-w-2xl mx-auto p-8 rounded-2xl bg-gradient-to-b from-green-500/20 to-green-500/10 backdrop-blur-md border border-green-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all duration-300">
           <div className="flex flex-col items-center space-y-6">
             {/* Success Icon */}
-            <div className="p-4 rounded-full bg-green-500/20 border border-green-500/30">
+            <div className="p-4 rounded-full bg-[#00D6AF]/20 border border-[#00D6AF]/30">
               <CheckCircle className="h-16 w-16 text-green-400" />
             </div>
 

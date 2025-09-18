@@ -436,7 +436,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
     }
 
     return (
-      <div className={`p-4 rounded-2xl bg-green-500/20 backdrop-blur-md border border-green-400/30 ${className}`}>
+      <div className={`p-4 rounded-2xl bg-[#00D6AF]/20 backdrop-blur-md border border-[#00D6AF]/30 ${className}`}>
         <div className="text-center">
           <div className="text-green-100 font-semibold mb-2">Invoice Paid</div>
           <Button 

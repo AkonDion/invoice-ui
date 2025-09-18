@@ -11,12 +11,12 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       case "PAID":
         return {
           label: "PAID",
-          className: "bg-green-500/20 text-green-100 border-green-400/30 backdrop-blur-md",
+          className: "bg-[#00D6AF]/20 text-white border-[#00D6AF]/30 backdrop-blur-md",
         }
       case "PARTIAL":
         return {
           label: "PARTIAL",
-          className: "bg-[#00D6AF]/20 text-[#00D6AF] border-[#00D6AF]/30 backdrop-blur-md",
+          className: "bg-[#00D6AF]/20 text-white border-[#00D6AF]/30 backdrop-blur-md",
         }
       case "DUE":
         return {
