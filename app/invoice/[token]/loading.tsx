@@ -1,11 +1,11 @@
 export default function Loading() {
   return (
     <div className="min-h-[100dvh] relative pb-20 md:pb-0">
-      {/* Background Image */}
+      {/* Background Image - Match the invoice page */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url(/images/gradient-background.jpg)",
+          backgroundImage: "url(/Grid%202.png)",
         }}
       />
 

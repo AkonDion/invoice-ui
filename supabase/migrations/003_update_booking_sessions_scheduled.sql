@@ -14,3 +14,4 @@ ALTER TABLE booking_sessions
 -- Add comment for the new status
 COMMENT ON COLUMN booking_sessions.status IS 'Booking status: ACTIVE (can be modified), SCHEDULED (locked), COMPLETED, CANCELLED, EXPIRED';
 
+

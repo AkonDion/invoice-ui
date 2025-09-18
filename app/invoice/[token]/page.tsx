@@ -9,33 +9,47 @@ interface InvoicePageProps {
   searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-async function getInvoice(token: string): Promise<InvoicePayload> {
+async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload> {
   const supabase = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_ANON_KEY!
   );
 
-  const { data: invoiceData, error: invoiceError } = await supabase
-    .from("invoices")
-    .select("*")
-    .eq("token", token)
-    .single();
+  try {
+    // Fetch invoice with items in a single query using join
+    const { data: invoiceData, error: invoiceError } = await supabase
+      .from("invoices")
+      .select(`
+        *,
+        invoice_items (
+          line_index,
+          sku,
+          description,
+          quantity,
+          price,
+          total,
+          tax_amount,
+          discount_amount
+        )
+      `)
+      .eq("token", token)
+      .single();
 
-  if (invoiceError || !invoiceData) {
-    log.error("Invoice fetch error:", invoiceError);
-    throw new Error("Unable to load invoice");
-  }
+    if (invoiceError || !invoiceData) {
+      log.error("Invoice fetch error:", invoiceError);
+      
+      // Retry once if it's a timeout or connection error
+      if (retryCount === 0 && (invoiceError.code === 'PGRST301' || invoiceError.message?.includes('timeout'))) {
+        log.info("Retrying invoice fetch due to timeout...");
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        return getInvoice(token, 1);
+      }
+      
+      throw new Error("Unable to load invoice");
+    }
 
-  const { data: itemsData, error: itemsError } = await supabase
-    .from("invoice_items")
-    .select("*")
-    .eq("invoice_id", invoiceData.invoice_id)
-    .order("line_index");
-
-  if (itemsError || !itemsData) {
-    log.error("Invoice items fetch error:", itemsError);
-    throw new Error("Unable to load invoice items");
-  }
+    // Extract items from the joined query result
+    const itemsData = invoiceData.invoice_items || [];
 
   const invoice: InvoicePayload = {
     invoiceId: invoiceData.invoice_id,
@@ -110,7 +124,11 @@ async function getInvoice(token: string): Promise<InvoicePayload> {
     receiptUrl: invoiceData.receipt_url,
   };
 
-  return invoice;
+    return invoice;
+  } catch (error) {
+    log.error("Invoice loading failed:", error);
+    throw error;
+  }
 }
 
 export default async function InvoicePage({ params, searchParams }: InvoicePageProps) {

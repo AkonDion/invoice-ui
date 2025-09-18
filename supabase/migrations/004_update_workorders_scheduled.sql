@@ -9,3 +9,4 @@ ALTER TABLE workorders
 -- Add comment for the new status
 COMMENT ON COLUMN workorders.status IS 'Work order status: ACTIVE (can be modified), SCHEDULED (locked), COMPLETED, CANCELLED, EXPIRED';
 
+

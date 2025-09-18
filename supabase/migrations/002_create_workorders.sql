@@ -77,3 +77,4 @@ CREATE TABLE workorder_appointments (
 -- Create index for appointments
 CREATE INDEX idx_workorder_appointments_workorder ON workorder_appointments(workorder_id);
 
+
