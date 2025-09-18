@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
+import { ErrorBoundary } from '@/components/error-boundary'
 import './globals.css'
+
+// Import error suppression for production
+import '@/lib/error-suppression'
 
 export const metadata: Metadata = {
   title: 'Comfort Hub Checkout',
@@ -31,8 +34,9 @@ html {
         `}</style>
       </head>
       <body>
-        {children}
-        <Analytics />
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </body>
     </html>
   )
