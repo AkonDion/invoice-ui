@@ -33,7 +33,7 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
       className={`
         p-4 rounded-2xl border transition-all duration-200 cursor-pointer h-full flex flex-col
         ${isSelected 
-          ? 'bg-green-500/20 border-green-500/40 shadow-lg shadow-green-500/10' 
+          ? 'bg-[#00D6AF]/20 border-[#00D6AF]/40 shadow-lg shadow-[#00D6AF]/10' 
           : 'bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:border-white/30'
         }
       `}
@@ -111,7 +111,7 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
           className={`
             w-full mt-auto px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer
             ${isSelected 
-              ? 'bg-green-600 hover:bg-green-700 text-white border-0 shadow-lg' 
+              ? 'bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white border-0 shadow-lg' 
               : 'bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-white/30'
             }
           `}

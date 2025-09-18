@@ -145,12 +145,12 @@ export function CalendarAvailability({
         </div>
 
         <div className="space-y-4">
-          <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-            <div className="flex items-center gap-2 text-green-200">
+          <div className="p-4 rounded-lg bg-[#00D6AF]/10 border border-[#00D6AF]/30">
+            <div className="flex items-center gap-2 text-[#00D6AF]">
               <CheckCircle className="w-5 h-5" />
               <span className="font-medium">Scheduled Time:</span>
             </div>
-            <p className="text-green-100 mt-1">
+            <p className="text-white mt-1">
               {formatScheduledDate(scheduledDate)}
             </p>
           </div>
@@ -268,7 +268,7 @@ export function CalendarAvailability({
                       onClick={() => handleDateSelect(date)}
                       className={`w-full p-3 rounded-lg transition-all duration-200 ${
                         isDateSelected
-                          ? 'bg-green-500/20 border-green-500/40 text-green-200'
+                          ? 'bg-[#00D6AF]/20 border-[#00D6AF]/40 text-[#00D6AF]'
                           : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/30'
                       } border`}
                     >
@@ -291,7 +291,7 @@ export function CalendarAvailability({
                               onClick={() => handleSlotSelect(slot)}
                               className={`p-3 rounded-lg transition-all duration-200 ${
                                 isSlotSelected
-                                  ? 'bg-green-500/30 border-green-500/60 text-green-100'
+                                  ? 'bg-[#00D6AF]/30 border-[#00D6AF]/60 text-white'
                                   : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/30'
                               } border`}
                             >
@@ -303,7 +303,7 @@ export function CalendarAvailability({
                                     {bookingType === 'booking' ? 'Arrival Window' : 'Time on Site'}
                                   </div>
                                 </div>
-                                {isSlotSelected && <CheckCircle className="w-4 h-4 text-green-400" />}
+                                {isSlotSelected && <CheckCircle className="w-4 h-4 text-[#00D6AF]" />}
                               </div>
                             </button>
                           );

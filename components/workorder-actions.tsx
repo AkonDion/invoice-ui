@@ -152,7 +152,7 @@ export function WorkOrderActions({
     const displayArrivalWindow = scheduledDate ? formatArrivalWindow({ start: scheduledDate, end: new Date(new Date(scheduledDate).getTime() + 60 * 60 * 1000).toISOString() } as CalendarSlot) : (selectedSlot ? formatArrivalWindow(selectedSlot) : '');
 
     return (
-      <div className="p-4 rounded-2xl bg-green-500/20 backdrop-blur-md border border-green-500/40">
+      <div className="p-4 rounded-2xl bg-[#00D6AF]/20 backdrop-blur-md border border-[#00D6AF]/40">
         <div className="text-center space-y-4">
           <CheckCircle className="h-16 w-16 text-green-400 mx-auto" />
           <div>
@@ -208,7 +208,7 @@ export function WorkOrderActions({
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Add any specific instructions or details for the service team..."
           rows={3}
-          className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/60 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 resize-none"
+          className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/60 focus:ring-2 focus:ring-[#00D6AF] focus:border-transparent transition-colors duration-200 resize-none"
         />
       </div>
 
@@ -218,7 +218,7 @@ export function WorkOrderActions({
           <button
             onClick={handleScheduleWorkOrder}
             disabled={isSubmitting}
-            className="w-full max-w-md bg-green-600 hover:bg-green-700 text-white border-0 h-12 px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full max-w-md bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white border-0 h-12 px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="flex items-center justify-center">
               <Calendar className="h-4 w-4 mr-2" />

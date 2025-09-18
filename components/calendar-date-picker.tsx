@@ -80,7 +80,7 @@ export function CalendarDatePicker({
 
     return (
       <div className={`w-full ${className}`}>
-        <div className="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-green-500/20 border border-green-500/40 text-green-200">
+        <div className="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-[#00D6AF]/20 border border-[#00D6AF]/40 text-[#00D6AF]">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4" />
             <span className="font-medium">Scheduled:</span>
@@ -131,7 +131,7 @@ export function CalendarDatePicker({
     <div className={`w-full relative ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-white/5 border border-white/20 text-white/80 hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        className="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-white/5 border border-white/20 text-white/80 hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D6AF] focus:border-transparent"
       >
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />
@@ -166,7 +166,7 @@ export function CalendarDatePicker({
                           onClick={() => handleSlotSelect(slot)}
                           className={`p-2 rounded text-sm transition-all duration-200 ${
                             isSlotSelected
-                              ? 'bg-green-500/30 border-green-500/60 text-green-100'
+                              ? 'bg-[#00D6AF]/30 border-[#00D6AF]/60 text-white'
                               : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/30'
                           } border`}
                         >

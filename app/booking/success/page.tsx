@@ -91,7 +91,7 @@ function SuccessContent() {
             <div className="flex flex-col sm:flex-row gap-4 w-full">
               <Button
                 onClick={() => router.push('/')}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white border-0"
+                className="flex-1 bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white border-0"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Book Another Service
