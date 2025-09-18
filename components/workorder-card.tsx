@@ -2,6 +2,7 @@
 
 import { WorkOrderPayload } from '@/types/workorder';
 import { WorkOrderHeader } from './workorder-header';
+import { WorkOrderDetails } from './workorder-details';
 import { WorkOrderTotalsPanel } from './workorder-totals-panel';
 import { WorkOrderActions } from './workorder-actions';
 
@@ -20,6 +21,9 @@ export function WorkOrderCard({ workOrder, workOrderStatus }: WorkOrderCardProps
       <div className="space-y-6">
         {/* Header with contact info */}
         <WorkOrderHeader workOrder={workOrder.workOrder} />
+
+        {/* Work Order Details - Line Items */}
+        <WorkOrderDetails workOrder={workOrder.workOrder} />
 
         {/* Totals Panel */}
         <WorkOrderTotalsPanel 

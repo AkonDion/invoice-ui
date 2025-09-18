@@ -34,7 +34,27 @@ export function WorkOrderActions({
   // Function to format arrival window for workorders (1-hour window from start time)
   const formatArrivalWindow = (slot: CalendarSlot) => {
     const start = new Date(slot.start);
-    const end = new Date(start.getTime() + (60 * 60 * 1000)); // Add 1 hour for workorders
+    const end = new Date(start.getTime() + (60 * 60 * 1000)); // Add 1 hour for arrival window
+    
+    const startFormatted = start.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    const endFormatted = end.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    return `${startFormatted} - ${endFormatted}`;
+  };
+
+  // Function to format work duration (8 hours from start time)
+  const formatWorkDuration = (slot: CalendarSlot) => {
+    const start = new Date(slot.start);
+    const end = new Date(start.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours for work duration
     
     const startFormatted = start.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -166,9 +186,16 @@ export function WorkOrderActions({
               </p>
             )}
             {displayArrivalWindow && (
-              <p className="text-green-200/90 mt-1 font-medium">
-                Arrival Window: {displayArrivalWindow}
-              </p>
+              <div className="mt-2 space-y-1">
+                <p className="text-green-200/90 font-medium">
+                  Arrival Window: {displayArrivalWindow}
+                </p>
+                {selectedSlot && (
+                  <p className="text-green-200/80 text-sm">
+                    Time on Site: {formatWorkDuration(selectedSlot)}
+                  </p>
+                )}
+              </div>
             )}
             <p className="text-green-200/80 text-sm mt-2">
               This work order is now locked and cannot be modified.
