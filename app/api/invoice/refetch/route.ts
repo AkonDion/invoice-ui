@@ -3,9 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 import type { InvoicePayload } from '@/types/invoice'
 import { log } from '@/lib/logger'
 
-// Ensure Node runtime and no static caching
+// Ensure Node runtime with short caching for performance
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const revalidate = 30 // Cache for 30 seconds
 
 // Use SERVICE ROLE on the server so RLS doesn't block reads/writes
 const supabaseUrl = process.env.SUPABASE_URL
@@ -33,10 +34,22 @@ export async function GET(req: NextRequest) {
       serviceRoleLength: supabaseServiceRole?.length
     })
 
-    // Fetch fresh invoice data
+    // Fetch invoice with items in a single optimized query
     const { data: invoiceData, error: invoiceError } = await supabase
       .from("invoices")
-      .select("*")
+      .select(`
+        *,
+        invoice_items (
+          line_index,
+          sku,
+          description,
+          quantity,
+          price,
+          total,
+          tax_amount,
+          discount_amount
+        )
+      `)
       .eq("token", token)
       .single()
 
@@ -45,28 +58,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
-    // Debug: Log the fresh data from database
-    log.debug('🔄 Refetch - Fresh invoice data from DB:', {
-      status: invoiceData.status,
-      amount_paid: invoiceData.amount_paid,
-      amount_due: invoiceData.amount_due,
-      date_paid: invoiceData.date_paid,
-      updated_at: invoiceData.updated_at,
-      invoice_id: invoiceData.invoice_id,
-      token: invoiceData.token
-    })
-
-    // Fetch invoice items
-    const { data: itemsData, error: itemsError } = await supabase
-      .from("invoice_items")
-      .select("*")
-      .eq("invoice_id", invoiceData.invoice_id)
-      .order("line_index")
-
-    if (itemsError || !itemsData) {
-      log.error("Invoice items refetch error:", itemsError)
-      return NextResponse.json({ error: 'Invoice items not found' }, { status: 404 })
-    }
+    // Extract items from the joined query result
+    const itemsData = invoiceData.invoice_items || []
 
     // Transform the data to match InvoicePayload format
     const invoice: InvoicePayload = {
@@ -151,7 +144,7 @@ export async function GET(req: NextRequest) {
       invoiceId: invoice.invoiceId
     })
 
-    return NextResponse.json({ invoice })
+    return NextResponse.json(invoice)
 
   } catch (error) {
     log.error('Unexpected error in refetch route:', error)

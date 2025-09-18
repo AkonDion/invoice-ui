@@ -1,7 +1,8 @@
-import type { InvoicePayload } from "@/types/invoice";
-import { createClient } from "@supabase/supabase-js";
+import { Suspense } from 'react';
 import { InvoiceRefetchProvider } from "@/components/invoice-refetch-provider";
 import { InvoiceCardWithRefetch } from "@/components/invoice-card-with-refetch";
+import type { InvoicePayload } from "@/types/invoice";
+import { createClient } from "@supabase/supabase-js";
 import { log } from '@/lib/logger';
 
 interface InvoicePageProps {

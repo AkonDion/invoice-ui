@@ -9,14 +9,18 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Increase timeout for server-side rendering
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
-  },
   // Add timeout configuration
   serverRuntimeConfig: {
     // Increase timeout to 30 seconds
     maxDuration: 30,
+  },
+  // Increase timeout for server-side rendering
+  experimental: {
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+    // Add request timeout for API routes
+    serverActions: {
+      allowedOrigins: ['localhost:3000', '*.vercel.app'],
+    },
   },
   // Suppress console errors in production
   compiler: {
