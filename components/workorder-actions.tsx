@@ -31,10 +31,10 @@ export function WorkOrderActions({
   const [notes, setNotes] = useState('');
   const [isScheduledLocal, setIsScheduledLocal] = useState(false);
 
-  // Function to format arrival window for workorders
-  const formatArrivalWindow = (startTime: string) => {
-    const start = new Date(startTime);
-    const end = new Date(start.getTime() + (60 * 60 * 1000)); // Add 1 hour
+  // Function to format arrival window for workorders (1-hour window from start time)
+  const formatArrivalWindow = (slot: CalendarSlot) => {
+    const start = new Date(slot.start);
+    const end = new Date(start.getTime() + (60 * 60 * 1000)); // Add 1 hour for workorders
     
     const startFormatted = start.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -104,7 +104,7 @@ export function WorkOrderActions({
           body: JSON.stringify({
             // Standardized section
             scheduledDate: selectedSlot.start,
-            arrivalWindow: formatArrivalWindow(selectedSlot.start),
+            arrivalWindow: formatArrivalWindow(selectedSlot),
             contactId: result.workOrder.contact_id,
             bookingType: 'work_order',
             
@@ -149,7 +149,7 @@ export function WorkOrderActions({
     };
 
     const displayDate = scheduledDate || (selectedSlot?.start);
-    const displayArrivalWindow = scheduledDate ? formatArrivalWindow(scheduledDate) : (selectedSlot ? formatArrivalWindow(selectedSlot.start) : '');
+    const displayArrivalWindow = scheduledDate ? formatArrivalWindow({ start: scheduledDate, end: new Date(new Date(scheduledDate).getTime() + 60 * 60 * 1000).toISOString() } as CalendarSlot) : (selectedSlot ? formatArrivalWindow(selectedSlot) : '');
 
     return (
       <div className="p-4 rounded-2xl bg-green-500/20 backdrop-blur-md border border-green-500/40">

@@ -29,8 +29,8 @@ export function CalendarAvailability({
   const [showAllDates, setShowAllDates] = useState(true);
 
   // Function to format arrival window
-  const formatArrivalWindow = (startTime: string) => {
-    const start = new Date(startTime);
+  const formatArrivalWindow = (slot: CalendarSlot) => {
+    const start = new Date(slot.start);
     const end = new Date(start.getTime() + (bookingType === 'booking' ? 2 * 60 * 60 * 1000 : 60 * 60 * 1000)); // Add 2 hours for booking, 1 hour for workorders
     
     const startFormatted = start.toLocaleTimeString('en-US', {
@@ -136,24 +136,6 @@ export function CalendarAvailability({
       });
     };
 
-    const formatArrivalWindow = (startTime: string) => {
-      const start = new Date(startTime);
-      const end = new Date(start.getTime() + (bookingType === 'booking' ? 2 * 60 * 60 * 1000 : 60 * 60 * 1000)); // Add 2 hours for booking, 1 hour for workorders
-      
-      const startFormatted = start.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      });
-      
-      const endFormatted = end.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      });
-      
-      return `${startFormatted} - ${endFormatted}`;
-    };
 
     return (
       <div className={`p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl ${className}`}>
@@ -180,7 +162,7 @@ export function CalendarAvailability({
                 <span className="font-medium">Arrival Window:</span>
               </div>
               <p className="text-blue-100 mt-1">
-                {formatArrivalWindow(scheduledDate)}
+                {formatArrivalWindow({ start: scheduledDate, end: new Date(new Date(scheduledDate).getTime() + (bookingType === 'booking' ? 2 * 60 * 60 * 1000 : 60 * 60 * 1000)).toISOString() } as CalendarSlot)}
               </p>
             </div>
           )}
@@ -381,7 +363,7 @@ export function CalendarAvailability({
                 <span className="font-medium">Arrival Window:</span>
               </div>
               <p className="text-blue-100 mt-1">
-                {formatArrivalWindow(selectedSlot.start)}
+                {formatArrivalWindow(selectedSlot)}
               </p>
             </div>
           )}
