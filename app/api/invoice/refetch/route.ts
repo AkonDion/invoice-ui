@@ -3,10 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 import type { InvoicePayload } from '@/types/invoice'
 import { log } from '@/lib/logger'
 
-// Ensure Node runtime with short caching for performance
+// Ensure Node runtime with minimal caching for fresh data
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const revalidate = 30 // Cache for 30 seconds
+export const revalidate = 0 // No caching - always fetch fresh data
 
 // Use SERVICE ROLE on the server so RLS doesn't block reads/writes
 const supabaseUrl = process.env.SUPABASE_URL
@@ -144,7 +144,14 @@ export async function GET(req: NextRequest) {
       invoiceId: invoice.invoiceId
     })
 
-    return NextResponse.json(invoice)
+    const response = NextResponse.json(invoice)
+    
+    // Add cache-busting headers to prevent browser caching
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
 
   } catch (error) {
     log.error('Unexpected error in refetch route:', error)

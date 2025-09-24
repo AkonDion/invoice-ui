@@ -1,9 +1,23 @@
-import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import { InvoiceRefetchProvider } from "@/components/invoice-refetch-provider";
 import { InvoiceCardWithRefetch } from "@/components/invoice-card-with-refetch";
 import type { InvoicePayload } from "@/types/invoice";
 import { createClient } from "@supabase/supabase-js";
 import { log } from '@/lib/logger';
+
+// Force dynamic rendering to prevent static caching
+export const dynamic = 'force-dynamic';
+
+interface InvoiceItemData {
+  line_index: number;
+  sku: string;
+  description: string;
+  quantity: number;
+  price: number;
+  total: number;
+  tax_amount: number;
+  discount_amount: number;
+}
 
 interface InvoicePageProps {
   params: { token: string };
@@ -40,13 +54,14 @@ async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload
       log.error("Invoice fetch error:", invoiceError);
       
       // Retry once if it's a timeout or connection error
-      if (retryCount === 0 && (invoiceError.code === 'PGRST301' || invoiceError.message?.includes('timeout'))) {
+      if (retryCount === 0 && invoiceError && (invoiceError.code === 'PGRST301' || invoiceError.message?.includes('timeout'))) {
         log.info("Retrying invoice fetch due to timeout...");
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
         return getInvoice(token, 1);
       }
       
-      throw new Error("Unable to load invoice");
+      // Redirect to home page for failed or expired tokens
+      redirect('/');
     }
 
     // Extract items from the joined query result
@@ -107,7 +122,7 @@ async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload
         email: invoiceData.shipping_email,
       },
     },
-    lineItems: itemsData.map(item => ({
+    lineItems: itemsData.map((item: InvoiceItemData) => ({
       lineIndex: item.line_index,
       sku: item.sku,
       description: item.description,
@@ -119,6 +134,7 @@ async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload
     })),
     pickup: {
       name: invoiceData.pickup_name,
+
       date: invoiceData.pickup_date,
     },
     invoiceUrl: invoiceData.invoice_url,
@@ -128,11 +144,13 @@ async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload
     return invoice;
   } catch (error) {
     log.error("Invoice loading failed:", error);
-    throw error;
+    // Redirect to home page for any other errors
+    redirect('/');
   }
 }
 
 export default async function InvoicePage({ params, searchParams }: InvoicePageProps) {
+  // Force dynamic rendering to prevent static caching
   const invoice = await getInvoice(params.token);
   const paymentStatus = searchParams?.payment;
 
