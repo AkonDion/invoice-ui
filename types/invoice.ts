@@ -20,6 +20,7 @@ export type InvoiceLineItem = {
   total: number // extended
   taxAmount: number
   discountAmount: number
+  warrantyYears: number | null
 }
 
 export type InvoiceTax = { 
@@ -99,6 +100,7 @@ export const invoiceLineItemSchema = z.object({
   total: z.number(),
   taxAmount: z.number(),
   discountAmount: z.number(),
+  warrantyYears: z.number().nullable(),
 })
 
 export const invoiceTaxSchema = z.object({

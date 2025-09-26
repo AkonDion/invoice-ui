@@ -462,7 +462,7 @@ export function HelcimPay({ invoice, className = "" }: HelcimPayProps) {
         <Button
           onClick={handlePayNow}
           disabled={isLoading || !isInitialized}
-          className="bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white font-semibold px-6 py-3 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#00D6AF] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white font-semibold px-10 py-5 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#00D6AF] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>

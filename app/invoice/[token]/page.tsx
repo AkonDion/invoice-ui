@@ -17,6 +17,7 @@ interface InvoiceItemData {
   total: number;
   tax_amount: number;
   discount_amount: number;
+  warranty_years: number | null;
 }
 
 interface InvoicePageProps {
@@ -44,7 +45,8 @@ async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload
           price,
           total,
           tax_amount,
-          discount_amount
+          discount_amount,
+          warranty_years
         )
       `)
       .eq("token", token)
@@ -131,6 +133,7 @@ async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload
       total: item.total,
       taxAmount: item.tax_amount,
       discountAmount: item.discount_amount,
+      warrantyYears: item.warranty_years,
     })),
     pickup: {
       name: invoiceData.pickup_name,

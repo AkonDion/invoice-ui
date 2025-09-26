@@ -46,7 +46,7 @@ export function TotalsPanel({ invoice }: TotalsPanelProps) {
           </div>
         </div>
 
-        <div className="flex justify-between text-lg font-bold text-[#00D6AF]">
+        <div className="flex justify-between text-base font-bold text-[#00D6AF]">
           <span>Amount Due</span>
           <span>{money(invoice.amountDue, invoice.currency)}</span>
         </div>

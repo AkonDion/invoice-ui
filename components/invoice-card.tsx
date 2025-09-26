@@ -3,9 +3,11 @@
 import { InvoiceHeader } from "@/components/invoice-header"
 import { BillingBlock } from "@/components/billing-block"
 import { TotalsPanel } from "@/components/totals-panel"
-import { LineItemsTable } from "@/components/line-items-table"
 import { NotesAccordion } from "@/components/notes-accordion"
 import { PayNowBar } from "@/components/pay-now-bar"
+import { InvoiceDetails } from "@/components/invoice-details"
+import { InvoiceSummary } from "@/components/invoice-summary"
+import { WarrantyDetails } from "@/components/warranty-details"
 import { Toast, useToast } from "@/components/toast"
 import type { InvoicePayload } from "@/types/invoice"
 import { MapPin, Truck } from "lucide-react"
@@ -39,8 +41,14 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
             <TotalsPanel invoice={invoice} />
           </div>
 
-          {/* Line Items */}
-          <LineItemsTable items={invoice.lineItems} currency={invoice.currency} />
+          {/* Invoice Details - Line Items */}
+          <InvoiceDetails invoice={invoice} />
+
+          {/* Invoice Summary */}
+          <InvoiceSummary invoice={invoice} />
+
+          {/* Warranty Details */}
+          <WarrantyDetails invoice={invoice} />
 
           {/* Notes */}
           <NotesAccordion notes={invoice.notes} />
