@@ -147,7 +147,7 @@ export type WorkOrderSession = {
   token: string;
   work_order_id: string;
   work_order_name: string;
-  status: "ACTIVE" | "COMPLETED" | "CANCELLED" | "EXPIRED";
+  status: "ACTIVE" | "SENT" | "PENDING" | "APPROVED" | "DISPATCHED" | "SCHEDULED" | "COMPLETED" | "CANCELLED" | "EXPIRED";
   work_order_type: string;
   grand_total: number;
   sub_total: number;

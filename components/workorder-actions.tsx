@@ -1,7 +1,7 @@
 'use client';
 
 import { WorkOrder } from '@/types/workorder';
-import { Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, AlertCircle, Clock3, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { formatCurrency } from '@/types/workorder';
 import { CalendarAvailability } from './calendar-availability';
@@ -15,6 +15,7 @@ interface WorkOrderActionsProps {
   workOrderToken: string;
   isScheduled?: boolean;
   scheduledDate?: string;
+  workOrderSessionStatus?: string;
 }
 
 export function WorkOrderActions({ 
@@ -24,7 +25,8 @@ export function WorkOrderActions({
   workOrderStatus,
   workOrderToken,
   isScheduled = false,
-  scheduledDate
+  scheduledDate,
+  workOrderSessionStatus
 }: WorkOrderActionsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
@@ -171,33 +173,98 @@ export function WorkOrderActions({
     const displayDate = scheduledDate || (selectedSlot?.start);
     const displayArrivalWindow = scheduledDate ? formatArrivalWindow({ start: scheduledDate, end: new Date(new Date(scheduledDate).getTime() + 60 * 60 * 1000).toISOString() } as CalendarSlot) : (selectedSlot ? formatArrivalWindow(selectedSlot) : '');
 
+    // Get status-specific messages
+    const getStatusMessage = () => {
+      const status = workOrderSessionStatus?.toString().trim().toUpperCase();
+      switch (status) {
+        case 'SENT':
+          return {
+            title: 'Work Order Sent!',
+            description: `Your work order request is in our inbox. We'll send confirmation to ${workOrder.contact.email} shortly.`,
+            icon: Clock3,
+            iconColor: 'text-blue-400',
+            bgColor: 'bg-blue-500/20',
+            borderColor: 'border-blue-500/40',
+            showScheduling: true
+          };
+        case 'PENDING':
+          return {
+            title: 'Work Order Under Review',
+            description: `We're taking a bit more time to review your work order details. We'll send confirmation to ${workOrder.contact.email} shortly.`,
+            icon: Clock3,
+            iconColor: 'text-blue-400',
+            bgColor: 'bg-blue-500/20',
+            borderColor: 'border-blue-500/40',
+            showScheduling: true
+          };
+        case 'APPROVED':
+        case 'DISPATCHED':
+          return {
+            title: 'Work Order Approved!',
+            description: `Everything looks good. We've approved your requested time without any changes.\n\nAppointment confirmation has been sent to ${workOrder.contact.email}.`,
+            icon: CheckCircle2,
+            iconColor: 'text-green-400',
+            bgColor: 'bg-green-500/20',
+            borderColor: 'border-green-500/40',
+            showScheduling: true
+          };
+        case 'SCHEDULED':
+          return {
+            title: 'Work Order Submitted!',
+            description: `The appointment is created in our system, we're double checking everything. We'll send confirmation to ${workOrder.contact.email} shortly.`,
+            icon: CheckCircle,
+            iconColor: 'text-[#00D6AF]',
+            bgColor: 'bg-[#00D6AF]/20',
+            borderColor: 'border-[#00D6AF]/40',
+            showScheduling: true
+          };
+        default:
+          return {
+            title: 'Work Order Processed!',
+            description: 'Your work order has been processed.',
+            icon: CheckCircle,
+            iconColor: 'text-green-400',
+            bgColor: 'bg-green-500/20',
+            borderColor: 'border-green-500/40',
+            showScheduling: true
+          };
+      }
+    };
+
+    const statusMessage = getStatusMessage();
+    const StatusIcon = statusMessage.icon;
+
     return (
-      <div className="p-4 rounded-2xl bg-[#00D6AF]/20 backdrop-blur-md border border-[#00D6AF]/40">
+      <div className={`p-4 rounded-2xl ${statusMessage.bgColor} backdrop-blur-md border ${statusMessage.borderColor}`}>
         <div className="text-center space-y-4">
-          <CheckCircle className="h-16 w-16 text-green-400 mx-auto" />
+          <StatusIcon className={`h-16 w-16 ${statusMessage.iconColor} mx-auto`} />
           <div>
-            <h3 className="text-xl font-bold text-white">Work Order Scheduled!</h3>
-            <p className="text-green-200 mt-2">
-              Your work order has been successfully scheduled.
-            </p>
-            {displayDate && (
-              <p className="text-green-100 mt-2 font-medium">
+            <h3 className="text-xl font-bold text-white">{statusMessage.title}</h3>
+            <div className="text-white/80 mt-2">
+              {statusMessage.description.split('\n').map((line, index) => (
+                <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                  {line}
+                </p>
+              ))}
+            </div>
+            {statusMessage.showScheduling && displayDate && (
+              <p className="text-white/90 mt-2 font-medium">
                 Scheduled for: {formatScheduledDate(displayDate)}
               </p>
             )}
-            {displayArrivalWindow && (
+            {statusMessage.showScheduling && displayArrivalWindow && (
               <div className="mt-2 space-y-1">
-                <p className="text-green-200/90 font-medium">
+                <p className="text-white/80 font-medium">
                   Arrival Window: {displayArrivalWindow}
                 </p>
                 {selectedSlot && (
-                  <p className="text-green-200/80 text-sm">
+                  <p className="text-white/70 text-sm">
                     Time on Site: {formatWorkDuration(selectedSlot)}
                   </p>
                 )}
               </div>
             )}
-            <p className="text-green-200/80 text-sm mt-2">
+            <p className="text-white/60 text-sm mt-2">
               This work order is now locked and cannot be modified.
             </p>
           </div>

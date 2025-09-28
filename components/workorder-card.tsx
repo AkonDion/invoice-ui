@@ -40,8 +40,9 @@ export function WorkOrderCard({ workOrder, workOrderStatus }: WorkOrderCardProps
           totalDuration={totalDuration}
           workOrderStatus={workOrderStatus}
           workOrderToken={workOrder.token}
-          isScheduled={workOrder.status === 'SCHEDULED'}
+          isScheduled={workOrder.status !== 'ACTIVE'}
           scheduledDate={workOrder.scheduledDate}
+          workOrderSessionStatus={workOrder.status}
         />
       </div>
     </div>
