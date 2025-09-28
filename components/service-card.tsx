@@ -37,8 +37,8 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
         p-4 rounded-2xl border transition-all duration-200 cursor-pointer h-full flex flex-col relative
         ${isRoutineMaintenance 
           ? isSelected
-            ? 'bg-gradient-to-br from-[#8B5CF6]/30 to-[#A855F7]/30 border-[#8B5CF6]/70 shadow-xl shadow-[#8B5CF6]/25 ring-2 ring-[#8B5CF6]/40' 
-            : 'bg-gradient-to-br from-[#8B5CF6]/15 to-[#A855F7]/15 border-[#8B5CF6]/50 shadow-lg shadow-[#8B5CF6]/15 hover:bg-gradient-to-br hover:from-[#8B5CF6]/20 hover:to-[#A855F7]/20 hover:border-[#8B5CF6]/60 hover:shadow-xl hover:shadow-[#8B5CF6]/20'
+            ? 'bg-[#00D6AF]/20 border-[#00D6AF]/40 shadow-lg shadow-[#00D6AF]/10 ring-2 ring-[#00D6AF]/30' 
+            : 'bg-white/10 backdrop-blur-md border border-[#00D6AF]/60 hover:bg-white/20 hover:border-[#00D6AF]/80 shadow-lg shadow-[#00D6AF]/25'
           : isSelected 
             ? 'bg-[#00D6AF]/20 border-[#00D6AF]/40 shadow-lg shadow-[#00D6AF]/10' 
             : 'bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:border-white/30'
@@ -49,7 +49,7 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
       <div className="space-y-3 flex-1 flex flex-col">
         {/* Best Value Badge for Routine Maintenance */}
         {isRoutineMaintenance && (
-          <div className="absolute -top-2 -right-2 bg-white/20 backdrop-blur-md border border-white/30 text-white/90 text-xs font-medium px-3 py-1 rounded-full shadow-lg">
+          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#00D6AF] to-[#00D6AF]/80 backdrop-blur-md border border-[#00D6AF] text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg shadow-[#00D6AF]/30">
             BEST VALUE
           </div>
         )}
@@ -126,8 +126,8 @@ export function ServiceCard({ service, isSelected, onToggle }: ServiceCardProps)
             w-full mt-auto px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer
             ${isRoutineMaintenance
               ? isSelected 
-                ? 'bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] hover:from-[#8B5CF6]/90 hover:to-[#A855F7]/90 text-white border-0 shadow-lg font-bold' 
-                : 'bg-white/20 backdrop-blur-sm border border-[#8B5CF6]/60 text-white hover:bg-[#8B5CF6]/20 hover:border-[#8B5CF6]/80 font-semibold'
+                ? 'bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white border-0 shadow-lg' 
+                : 'bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-white/30'
               : isSelected 
                 ? 'bg-[#00D6AF] hover:bg-[#00D6AF]/90 text-white border-0 shadow-lg' 
                 : 'bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-white/30'
