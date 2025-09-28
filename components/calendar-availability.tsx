@@ -269,7 +269,7 @@ export function CalendarAvailability({
         <p className="text-blue-100 text-sm">
           {bookingType === 'booking' 
             ? 'Each time slot represents a 2-hour arrival window. Our team will arrive within this window and contact you when they\'re on their way.'
-            : 'Each time slot shows estimated time on site. Our team will arrive within a 1-hour window and contact you when they\'re on their way.'
+            : 'Each time slot shows estimated time on site. Our team will arrive within a 1-hour window of your chosen appointment.'
           }
         </p>
       </div>
