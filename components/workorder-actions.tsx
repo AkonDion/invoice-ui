@@ -175,22 +175,7 @@ export function WorkOrderActions({
 
     // Get status-specific messages
     const getStatusMessage = () => {
-      // If we just scheduled locally, show SCHEDULED status immediately
-      if (isScheduledLocal) {
-        return {
-          title: 'Work Order Submitted!',
-          description: `The appointment is created in our system, we're double checking everything. We'll send confirmation to ${workOrder.contact.email} shortly.`,
-          icon: CheckCircle,
-          iconColor: 'text-[#00D6AF]',
-          bgColor: 'bg-[#00D6AF]/20',
-          borderColor: 'border-[#00D6AF]/40',
-          showScheduling: true
-        };
-      }
-      
       const status = workOrderSessionStatus?.toString().trim().toUpperCase();
-      console.log('WorkOrderActions - workOrderSessionStatus:', workOrderSessionStatus);
-      console.log('WorkOrderActions - processed status:', status);
       switch (status) {
         case 'SENT':
           return {
@@ -235,12 +220,12 @@ export function WorkOrderActions({
           };
         default:
           return {
-            title: 'Work Order Processed!',
-            description: 'Your work order has been processed.',
+            title: 'Work Order Submitted!',
+            description: `The appointment is created in our system, we're double checking everything. We'll send confirmation to ${workOrder.contact.email} shortly.`,
             icon: CheckCircle,
-            iconColor: 'text-green-400',
-            bgColor: 'bg-green-500/20',
-            borderColor: 'border-green-500/40',
+            iconColor: 'text-[#00D6AF]',
+            bgColor: 'bg-[#00D6AF]/20',
+            borderColor: 'border-[#00D6AF]/40',
             showScheduling: true
           };
       }
