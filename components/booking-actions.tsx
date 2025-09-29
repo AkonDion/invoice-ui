@@ -63,6 +63,10 @@ export function BookingActions({
 
     setIsSubmitting(true);
     try {
+      // Separate services into regular and missing asset services
+      const regularServices = selectedServices.filter(s => !s.isMissingAsset);
+      const missingAssetServices = selectedServices.filter(s => s.isMissingAsset);
+
       // Save selected services first
       const updateResponse = await fetch('/api/booking/update', {
         method: 'POST',
@@ -72,6 +76,7 @@ export function BookingActions({
         body: JSON.stringify({
           token: bookingToken,
           selectedServices: selectedServices.map(s => s.id),
+          missingAssetServices: missingAssetServices.map(s => s.id),
           notes: notes
         }),
       });
@@ -119,6 +124,11 @@ export function BookingActions({
               booking: result.booking,
               start: selectedSlot.start,
               notes: notes,
+              missingAssetServices: missingAssetServices.map(s => ({
+                id: s.id,
+                name: s.name,
+                fsm_id: s.fsm_id
+              })),
               timestamp: new Date().toISOString()
             }
           }),

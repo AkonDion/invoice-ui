@@ -65,32 +65,63 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
     }
 
+    // Define the three standard maintenance services
+    const standardServiceIds = [
+      "24404000000853158", // ROUTINE SYSTEM MAINTENANCE
+      "24404000000853155", // ROUTINE CONDENSER MAINTENANCE  
+      "24404000000853156"  // ROUTINE FURNACE MAINTENANCE
+    ];
+
     // Fetch all available services for all FSM IDs
-    const { data: allServices, error: servicesError } = await supabase
+    const { data: availableServices, error: servicesError } = await supabase
       .from("services")
       .select("*")
       .in("fsm_id", bookingSession.fsm_id) // fsm_id is now an array
       .order("name");
 
-    if (servicesError || !allServices) {
+    if (servicesError || !availableServices) {
       console.error("Services fetch error:", servicesError);
       return NextResponse.json({ error: 'Services not found' }, { status: 404 });
     }
 
-    // Map services to our expected format
-    const mappedServices = allServices.map(service => ({
-      id: service.id,
-      name: service.name,
-      description: service.description || '',
-      price: parseFloat(service.unit_price || '0'),
-      tax: parseFloat(service.tax || '0'),
-      duration: 60, // Default 1 hour duration since not in your schema
-      fsm_id: service.fsm_id,
-      category: service.type || '',
-      is_active: true,
-      created_at: service.created_at,
-      updated_at: service.created_at
-    }));
+    // Fetch all standard services (regardless of fsm_id)
+    const { data: allStandardServices, error: standardServicesError } = await supabase
+      .from("services")
+      .select("*")
+      .in("fsm_id", standardServiceIds)
+      .order("name");
+
+    if (standardServicesError || !allStandardServices) {
+      console.error("Standard services fetch error:", standardServicesError);
+      return NextResponse.json({ error: 'Standard services not found' }, { status: 404 });
+    }
+
+    // Create a map of available services by fsm_id for quick lookup
+    const availableServicesMap = new Map();
+    availableServices.forEach(service => {
+      availableServicesMap.set(service.fsm_id, service);
+    });
+
+    // Map all standard services, marking missing assets appropriately
+    const mappedServices = allStandardServices.map(service => {
+      const isAvailable = availableServicesMap.has(service.fsm_id);
+      const serviceData = isAvailable ? availableServicesMap.get(service.fsm_id) : service;
+      
+      return {
+        id: serviceData.id,
+        name: serviceData.name,
+        description: serviceData.description || '',
+        price: parseFloat(serviceData.unit_price || '0'),
+        tax: parseFloat(serviceData.tax || '0'),
+        duration: 60, // Default 1 hour duration since not in your schema
+        fsm_id: serviceData.fsm_id,
+        category: serviceData.type || '',
+        is_active: true,
+        created_at: serviceData.created_at,
+        updated_at: serviceData.created_at,
+        isMissingAsset: !isAvailable
+      };
+    });
 
     // Get selected services based on selected_services array
     const selectedServices = mappedServices.filter(service => 

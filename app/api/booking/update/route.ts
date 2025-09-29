@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRole);
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, selectedServices, scheduledDate, notes } = await request.json();
+    const { token, selectedServices, missingAssetServices, scheduledDate, notes } = await request.json();
 
     if (!token) {
       return NextResponse.json(
@@ -61,16 +61,47 @@ export async function POST(request: NextRequest) {
 
     // Validate selected services if provided
     if (selectedServices && Array.isArray(selectedServices)) {
-      // Verify all selected services exist for any of the FSM IDs
+      // Define the three standard maintenance services
+      const standardServiceIds = [
+        "24404000000853158", // ROUTINE SYSTEM MAINTENANCE
+        "24404000000853155", // ROUTINE CONDENSER MAINTENANCE  
+        "24404000000853156"  // ROUTINE FURNACE MAINTENANCE
+      ];
+
+      // Verify all selected services exist in the standard services
       const { data: services, error: servicesError } = await supabase
         .from('services')
         .select('id')
         .in('id', selectedServices)
-        .in('fsm_id', bookingSession.fsm_id); // fsm_id is now an array
+        .in('fsm_id', standardServiceIds);
 
       if (servicesError || !services || services.length !== selectedServices.length) {
         return NextResponse.json(
           { error: 'Invalid service selection' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate missing asset services if provided
+    if (missingAssetServices && Array.isArray(missingAssetServices)) {
+      // Define the three standard maintenance services
+      const standardServiceIds = [
+        "24404000000853158", // ROUTINE SYSTEM MAINTENANCE
+        "24404000000853155", // ROUTINE CONDENSER MAINTENANCE  
+        "24404000000853156"  // ROUTINE FURNACE MAINTENANCE
+      ];
+
+      // Verify all missing asset services exist in the standard services
+      const { data: services, error: servicesError } = await supabase
+        .from('services')
+        .select('id')
+        .in('id', missingAssetServices)
+        .in('fsm_id', standardServiceIds);
+
+      if (servicesError || !services || services.length !== missingAssetServices.length) {
+        return NextResponse.json(
+          { error: 'Invalid missing asset service selection' },
           { status: 400 }
         );
       }
@@ -81,6 +112,10 @@ export async function POST(request: NextRequest) {
 
     if (selectedServices !== undefined) {
       updateData.selected_services = selectedServices;
+    }
+
+    if (missingAssetServices !== undefined) {
+      updateData.missing_asset_services = missingAssetServices;
     }
 
     if (scheduledDate !== undefined && scheduledDate !== '') {
@@ -110,6 +145,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ Booking session updated:', {
       token,
       selectedServices: selectedServices?.length || 0,
+      missingAssetServices: missingAssetServices?.length || 0,
       scheduledDate,
       hasNotes: !!notes
     });

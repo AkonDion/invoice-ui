@@ -12,6 +12,7 @@ export type Service = {
   is_active: boolean
   created_at: string
   updated_at: string
+  isMissingAsset?: boolean // Indicates if this service requires an asset that's not recorded
 }
 
 export type Contact = {
@@ -35,6 +36,7 @@ export type BookingSession = {
   fsm_id: string[] // Array of FSM IDs
   status: "ACTIVE" | "COMPLETED" | "CANCELLED" | "EXPIRED"
   selected_services: string[] // Array of service UUIDs
+  missing_asset_services: string[] // Array of service UUIDs that require missing assets
   scheduled_date?: string
   notes?: string
   created_at: string
@@ -68,6 +70,7 @@ export const serviceSchema = z.object({
   is_active: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
+  isMissingAsset: z.boolean().optional(),
 })
 
 export const contactSchema = z.object({
@@ -91,6 +94,7 @@ export const bookingSessionSchema = z.object({
   fsm_id: z.array(z.string()), // Array of FSM IDs
   status: z.enum(["ACTIVE", "COMPLETED", "CANCELLED", "EXPIRED"]),
   selected_services: z.array(z.string()),
+  missing_asset_services: z.array(z.string()),
   scheduled_date: z.string().optional(),
   notes: z.string().optional(),
   created_at: z.string(),

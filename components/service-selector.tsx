@@ -3,7 +3,7 @@
 import { Service } from '@/types/booking';
 import { ServiceCard } from './service-card';
 import { Card } from './ui/card';
-import { Clock, DollarSign, CheckCircle } from 'lucide-react';
+import { Clock, DollarSign, CheckCircle, Info } from 'lucide-react';
 
 interface ServiceSelectorProps {
   services: Service[];
@@ -38,18 +38,45 @@ export function ServiceSelector({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {services.map((service) => {
-            const isSelected = selectedServiceIds.includes(service.id);
+          {(() => {
+            // Separate services into missing asset and regular services
+            const missingAssetServices = services.filter(service => service.isMissingAsset);
+            const regularServices = services.filter(service => !service.isMissingAsset);
             
-            return (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                isSelected={isSelected}
-                onToggle={() => onServiceToggle(service)}
-              />
-            );
-          })}
+            // Combine them with regular services first (left side), then missing asset services (right side)
+            const orderedServices = [...regularServices, ...missingAssetServices];
+            
+            return orderedServices.map((service) => {
+              const isSelected = selectedServiceIds.includes(service.id);
+              
+              return (
+                <ServiceCard
+                  key={service.id}
+                  service={service}
+                  isSelected={isSelected}
+                  onToggle={() => onServiceToggle(service)}
+                />
+              );
+            });
+          })()}
+        </div>
+      )}
+
+      {/* Missing Asset Services Explanation */}
+      {services.some(service => service.isMissingAsset) && (
+        <div className="p-3 rounded-lg bg-teal-500/10 border border-teal-400/20">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-teal-300 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-teal-100/90 leading-relaxed">
+              <p className="font-medium text-teal-50 mb-1">About Missing Asset Services</p>
+              <p>
+                Services marked "MISSING ASSET" indicate that the required equipment is not yet recorded in our system. 
+                You can still book these services—we will create a temporary asset, and our technician will complete 
+                the full details (Make, Model, Serial, Date of Manufacturing) during your appointment. Accurate 
+                record-keeping ensures our technicians are fully prepared to service and maintain your equipment.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
