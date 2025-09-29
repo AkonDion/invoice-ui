@@ -57,15 +57,7 @@ export function BookingRefetchProvider({ children, token }: BookingRefetchProvid
 
   // Auto-refetch when component mounts
   useEffect(() => {
-    // Immediate refetch on mount
     refetchBooking();
-    
-    // Additional refetch after delay to ensure data is fresh
-    const timer = setTimeout(() => {
-      refetchBooking();
-    }, 2000);
-
-    return () => clearTimeout(timer);
   }, [token]);
 
   // Listen for focus events to refetch when user returns to tab
@@ -76,15 +68,6 @@ export function BookingRefetchProvider({ children, token }: BookingRefetchProvid
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [token]);
-
-  // Periodic refetch every 30 seconds to ensure data freshness
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetchBooking();
-    }, 30000);
-
-    return () => clearInterval(interval);
   }, [token]);
 
   return (

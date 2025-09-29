@@ -69,15 +69,7 @@ export function InvoiceRefetchProvider({
 
   // Auto-refetch when component mounts (e.g., returning from success page)
   useEffect(() => {
-    // Immediate refetch on mount
     refetchInvoice()
-    
-    // Additional refetch after delay to ensure payment processing has completed
-    const timer = setTimeout(() => {
-      refetchInvoice()
-    }, 2000)
-
-    return () => clearTimeout(timer)
   }, [token])
 
   // Listen for focus events to refetch when user returns to tab
@@ -88,15 +80,6 @@ export function InvoiceRefetchProvider({
 
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
-  }, [token])
-
-  // Periodic refetch every 30 seconds to ensure data freshness
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetchInvoice()
-    }, 30000)
-
-    return () => clearInterval(interval)
   }, [token])
 
   return (
