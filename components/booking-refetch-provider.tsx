@@ -29,7 +29,16 @@ export function BookingRefetchProvider({ children, token }: BookingRefetchProvid
     setError(null);
 
     try {
-      const response = await fetch(`/api/booking/refetch?token=${token}`);
+      // Use API route with cache-busting parameters
+      const timestamp = Date.now()
+      const response = await fetch(`/api/booking/refetch?token=${encodeURIComponent(token)}&_t=${timestamp}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -46,8 +55,36 @@ export function BookingRefetchProvider({ children, token }: BookingRefetchProvid
     }
   };
 
+  // Auto-refetch when component mounts
   useEffect(() => {
+    // Immediate refetch on mount
     refetchBooking();
+    
+    // Additional refetch after delay to ensure data is fresh
+    const timer = setTimeout(() => {
+      refetchBooking();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [token]);
+
+  // Listen for focus events to refetch when user returns to tab
+  useEffect(() => {
+    const handleFocus = () => {
+      refetchBooking();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [token]);
+
+  // Periodic refetch every 30 seconds to ensure data freshness
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchBooking();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [token]);
 
   return (
