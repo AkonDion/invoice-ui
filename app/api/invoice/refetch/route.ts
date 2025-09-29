@@ -144,12 +144,13 @@ export async function GET(req: NextRequest) {
       invoiceId: invoice.invoiceId
     })
 
-    const response = NextResponse.json(invoice)
+    const response = NextResponse.json({ invoice })
     
     // Add cache-busting headers to prevent browser caching
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
+    response.headers.set('Last-Modified', new Date().toUTCString())
     
     return response
 

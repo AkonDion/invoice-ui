@@ -69,10 +69,12 @@ export async function POST(req: NextRequest) {
     if (status === 'PAID') {
       updateData.date_paid = new Date().toISOString()
       updateData.amount_paid = invoice.amount_due || invoice.amount
+      updateData.amount_due = 0  // Set amount due to 0 for paid invoices
     } else if (status === 'DUE' && invoice.status === 'PAID') {
       // If reverting from PAID back to DUE (e.g., declined payment), clear payment info
       updateData.date_paid = null
       updateData.amount_paid = 0
+      updateData.amount_due = invoice.amount  // Restore original amount as due
     }
 
     // Update the invoice

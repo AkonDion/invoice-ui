@@ -8,6 +8,9 @@ import { log } from '@/lib/logger';
 // Force dynamic rendering to prevent static caching
 export const dynamic = 'force-dynamic';
 
+// Add cache-busting headers
+export const revalidate = 0;
+
 interface InvoiceItemData {
   line_index: number;
   sku: string;
@@ -28,7 +31,12 @@ interface InvoicePageProps {
 async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload> {
   const supabase = createClient(
     process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!
+    process.env.SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: false
+      }
+    }
   );
 
   try {

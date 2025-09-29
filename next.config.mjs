@@ -30,6 +30,47 @@ const nextConfig = {
   },
   // Disable React strict mode in production to reduce error noise
   reactStrictMode: process.env.NODE_ENV !== 'production',
+  // Disable static optimization for invoice pages
+  trailingSlash: false,
+  // Add headers for cache control
+  async headers() {
+    return [
+      {
+        source: '/invoice/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ],
+      },
+      {
+        source: '/api/invoice/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ],
+      },
+    ];
+  },
 }
 
 export default nextConfig
