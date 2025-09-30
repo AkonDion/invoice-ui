@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
           price,
           total,
           tax_amount,
-          discount_amount
+          discount_amount,
+          warranty_years
         )
       `)
       .eq("token", token)
@@ -126,6 +127,7 @@ export async function GET(req: NextRequest) {
         total: item.total,
         taxAmount: item.tax_amount,
         discountAmount: item.discount_amount,
+        warrantyYears: item.warranty_years,
       })),
       pickup: {
         name: invoiceData.pickup_name,
