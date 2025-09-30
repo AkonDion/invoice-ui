@@ -29,16 +29,7 @@ export function BookingRefetchProvider({ children, token }: BookingRefetchProvid
     setError(null);
 
     try {
-      // Use API route with cache-busting parameters
-      const timestamp = Date.now()
-      const response = await fetch(`/api/booking/refetch?token=${encodeURIComponent(token)}&_t=${timestamp}`, {
-        method: 'GET',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
+      const response = await fetch(`/api/booking/refetch?token=${token}`);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -55,19 +46,8 @@ export function BookingRefetchProvider({ children, token }: BookingRefetchProvid
     }
   };
 
-  // Auto-refetch when component mounts
   useEffect(() => {
     refetchBooking();
-  }, [token]);
-
-  // Listen for focus events to refetch when user returns to tab
-  useEffect(() => {
-    const handleFocus = () => {
-      refetchBooking();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
   }, [token]);
 
   return (

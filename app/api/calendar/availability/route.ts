@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
     // Validate the response data
     const validatedData = calendarAvailabilitySchema.parse(data);
 
-    // Convert UTC times to Toronto timezone
-    const convertedData = validatedData.map(convertToTorontoTime);
+    // Don't convert times - the webhook already sends the correct times
+    const convertedData = validatedData;
 
     return NextResponse.json({
       success: true,
@@ -114,8 +114,8 @@ export async function GET(request: NextRequest) {
     // Validate the response data
     const validatedData = calendarAvailabilitySchema.parse(data);
 
-    // Convert UTC times to Toronto timezone
-    const convertedData = validatedData.map(convertToTorontoTime);
+    // Don't convert times - the webhook already sends the correct times
+    const convertedData = validatedData;
 
     return NextResponse.json({
       success: true,

@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use the scheduled date as-is since no timezone conversion is applied
+    const finalScheduledDate = scheduledDate;
+
     // Validate that work order session exists and is active
     const { data: workOrderSession, error: sessionError } = await supabase
       .from('workorders')
@@ -71,7 +74,7 @@ export async function POST(request: NextRequest) {
       .from('workorders')
       .update({
         status: 'SCHEDULED',
-        scheduled_date: scheduledDate,
+        scheduled_date: finalScheduledDate,
         notes: notes || null
       })
       .eq('token', token)

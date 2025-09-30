@@ -72,16 +72,6 @@ export function InvoiceRefetchProvider({
     refetchInvoice()
   }, [token])
 
-  // Listen for focus events to refetch when user returns to tab
-  useEffect(() => {
-    const handleFocus = () => {
-      refetchInvoice()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [token])
-
   return (
     <InvoiceRefetchContext.Provider value={{ invoice, refetchInvoice, isLoading }}>
       {children}

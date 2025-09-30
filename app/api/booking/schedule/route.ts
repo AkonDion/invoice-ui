@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use the scheduled date as-is since no timezone conversion is applied
+    const finalScheduledDate = scheduledDate;
+
     // Validate that booking session exists and is active
     const { data: bookingSession, error: sessionError } = await supabase
       .from('booking_sessions')
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Update booking session to SCHEDULED status
     const updateData: any = {
       status: 'SCHEDULED',
-      scheduled_date: scheduledDate
+      scheduled_date: finalScheduledDate
     };
     
     if (notes !== undefined && notes !== '') {
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Booking session scheduled:', {
       token,
-      scheduledDate,
+      scheduledDate: finalScheduledDate,
       hasNotes: !!notes
     });
 

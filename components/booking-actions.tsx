@@ -29,6 +29,7 @@ export function BookingActions({
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
   const [notes, setNotes] = useState('');
   const [isScheduledLocal, setIsScheduledLocal] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState<string | null>(null);
 
   // Function to format arrival window for bookings
   const formatArrivalWindow = (startTime: string) => {
@@ -104,6 +105,10 @@ export function BookingActions({
 
       const result = await scheduleResponse.json();
 
+      // Store the reverted time for success display
+      // The scheduledDate in the response is the reverted time
+      setScheduledTime(result.booking.scheduled_date);
+
       // Send webhook notification
       try {
         await fetch('https://nodechain.dev/webhook/d4f57f3f-dd70-4776-843e-a3ec4f56a003', {
@@ -151,7 +156,56 @@ export function BookingActions({
 
   // Show success message if booking was completed or scheduled
   if (bookingStatus === 'success' || isScheduled || isScheduledLocal) {
-    const displayArrivalWindow = scheduledDate ? formatArrivalWindow(scheduledDate) : (selectedSlot ? formatArrivalWindow(selectedSlot.start) : '');
+    // For success display, calculate from the scheduled date
+    // The scheduledDate is now stored as the original time (before timezone conversion)
+    const getDisplayArrivalWindow = () => {
+      // Use the label from the selected slot which contains the actual Toronto time
+      if (selectedSlot?.label) {
+        // Convert 24-hour format to 12-hour format for better UX
+        const convertTo12Hour = (time24: string) => {
+          const [hours, minutes] = time24.split(':');
+          const hour = parseInt(hours, 10);
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+          return `${hour12}:${minutes} ${ampm}`;
+        };
+        
+        // Parse the label (e.g., "14:00-16:00") and convert to 12-hour format
+        const [startTime, endTime] = selectedSlot.label.split('-');
+        const start12Hour = convertTo12Hour(startTime);
+        const end12Hour = convertTo12Hour(endTime);
+        
+        return `${start12Hour} - ${end12Hour}`;
+      }
+      
+      // Fallback to other sources if label is not available
+      const timeToUse = scheduledTime || scheduledDate || selectedSlot?.start;
+      
+      if (!timeToUse) return '';
+      
+      // The scheduled time is in UTC and represents Toronto local time
+      // We need to format it in Toronto timezone
+      const start = new Date(timeToUse);
+      const end = new Date(start.getTime() + (2 * 60 * 60 * 1000)); // Add 2 hours
+      
+      const startFormatted = start.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'America/Toronto'
+      });
+      
+      const endFormatted = end.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'America/Toronto'
+      });
+      
+      return `${startFormatted} - ${endFormatted}`;
+    };
+    
+    const displayArrivalWindow = getDisplayArrivalWindow();
 
     return (
       <div className="p-4 rounded-2xl bg-[#00D6AF]/20 backdrop-blur-md border border-[#00D6AF]/40">

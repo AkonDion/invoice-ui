@@ -101,18 +101,32 @@ export function CalendarAvailability({
     groupedSlots[date].some(slot => slot.status === 'available')
   );
 
-  // Group dates by week and limit to weeksToShow
-  const datesByWeek = availableDates.reduce((weeks, date, index) => {
-    const weekIndex = Math.floor(index / 7);
-    if (!weeks[weekIndex]) {
-      weeks[weekIndex] = [];
+  // Group dates by actual calendar weeks (Monday-Sunday)
+  const datesByWeek = availableDates.reduce((weeks, date) => {
+    const dateObj = new Date(date);
+    const dayOfWeek = dateObj.getDay(); // 0=Sunday, 1=Monday, etc.
+    
+    // Find the Monday of this week
+    const monday = new Date(dateObj);
+    monday.setDate(dateObj.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    monday.setHours(0, 0, 0, 0);
+    
+    const weekKey = monday.toISOString().split('T')[0];
+    
+    if (!weeks[weekKey]) {
+      weeks[weekKey] = [];
     }
-    weeks[weekIndex].push(date);
+    weeks[weekKey].push(date);
     return weeks;
-  }, [] as string[][]);
+  }, {} as Record<string, string[]>);
 
-  const visibleWeeks = datesByWeek.slice(0, weeksToShow);
-  const hasMoreWeeks = datesByWeek.length > weeksToShow;
+  // Convert to array and sort by week start date
+  const weekArray = Object.entries(datesByWeek)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, dates]) => dates);
+
+  const visibleWeeks = weekArray.slice(0, weeksToShow);
+  const hasMoreWeeks = weekArray.length > weeksToShow;
 
   const handleDateSelect = (date: string) => {
     // If we're in focused mode and this is the selected date, don't toggle
@@ -279,7 +293,7 @@ export function CalendarAvailability({
           <div key={weekIndex} className="space-y-3">
             {/* Week Header */}
             <div className="text-sm font-medium text-white/60 border-b border-white/20 pb-2">
-              Week {weekIndex + 1}
+              Week {weekIndex + 1} ({weekDates.length} day{weekDates.length !== 1 ? 's' : ''} available)
             </div>
             
             {/* Week Dates */}
@@ -356,7 +370,7 @@ export function CalendarAvailability({
               onClick={handleShowMore}
               className="px-6 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white/80 rounded-lg transition-all duration-200 hover:border-white/30"
             >
-              Show More Weeks ({datesByWeek.length - weeksToShow} remaining)
+              Show More Weeks ({weekArray.length - weeksToShow} remaining)
             </button>
           </div>
         )}
