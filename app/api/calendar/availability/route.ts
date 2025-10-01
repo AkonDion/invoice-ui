@@ -3,16 +3,16 @@ import { calendarAvailabilitySchema, CalendarBookingType, CalendarSlot } from '@
 
 const CALENDAR_WEBHOOK_URL = 'https://nodechain.dev/webhook/4905f161-d220-4ea5-91cc-9b64f159e924';
 
-// Convert UTC times to Toronto timezone
+// Convert "fake UTC" times (which are actually Toronto local times) to proper UTC
 function convertToTorontoTime(slot: CalendarSlot): CalendarSlot {
-  // Parse the UTC times
+  // Parse the times that are marked as UTC but are actually Toronto local time
   const startDate = new Date(slot.start);
   const endDate = new Date(slot.end);
   
   // The webhook returns times that should be treated as Toronto local time
   // but they're marked as UTC. We need to add 4 hours to get the correct UTC time
   // that when converted to Toronto time will show the correct local time.
-  const torontoOffset = 4 * 60; // +4 hours in minutes
+  const torontoOffset = 4 * 60; // +4 hours in minutes (Toronto is UTC-4 in EDT)
   
   // Apply the offset to convert from "fake UTC" to real UTC
   const realUtcStart = new Date(startDate.getTime() + (torontoOffset * 60 * 1000));
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
     // Validate the response data
     const validatedData = calendarAvailabilitySchema.parse(data);
 
-    // Don't convert times - the webhook already sends the correct times
-    const convertedData = validatedData;
+    // Convert times from "fake UTC" (which are actually Toronto local times) to proper UTC
+    const convertedData = validatedData.map(slot => convertToTorontoTime(slot));
 
     return NextResponse.json({
       success: true,
@@ -114,8 +114,8 @@ export async function GET(request: NextRequest) {
     // Validate the response data
     const validatedData = calendarAvailabilitySchema.parse(data);
 
-    // Don't convert times - the webhook already sends the correct times
-    const convertedData = validatedData;
+    // Convert times from "fake UTC" (which are actually Toronto local times) to proper UTC
+    const convertedData = validatedData.map(slot => convertToTorontoTime(slot));
 
     return NextResponse.json({
       success: true,
