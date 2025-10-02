@@ -73,6 +73,7 @@ export type InvoicePayload = {
   discounts: InvoiceDiscounts
   invoiceUrl?: string
   receiptUrl?: string
+  certificateUrl?: string
 }
 
 export type InvoicePageProps = {
@@ -153,6 +154,7 @@ export const invoicePayloadSchema = z.object({
   discounts: invoiceDiscountsSchema,
   invoiceUrl: z.string().optional(),
   receiptUrl: z.string().optional(),
+  certificateUrl: z.string().optional(),
 })
 
 export const invoicesArraySchema = z.array(invoicePayloadSchema).min(1)

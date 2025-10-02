@@ -4,6 +4,7 @@ import { InvoiceHeader } from "@/components/invoice-header"
 import { BillingBlock } from "@/components/billing-block"
 import { TotalsPanel } from "@/components/totals-panel"
 import { NotesAccordion } from "@/components/notes-accordion"
+import { MaintenanceCertificateAccordion } from "@/components/maintenance-certificate-accordion"
 import { PayNowBar } from "@/components/pay-now-bar"
 import { InvoiceDetails } from "@/components/invoice-details"
 import { InvoiceSummary } from "@/components/invoice-summary"
@@ -52,6 +53,9 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
 
           {/* Notes */}
           <NotesAccordion notes={invoice.notes} />
+
+          {/* Maintenance Certificate */}
+          <MaintenanceCertificateAccordion certificateUrl={invoice.certificateUrl} />
 
           {/* Pay Now - Desktop */}
           <div className="hidden md:block">

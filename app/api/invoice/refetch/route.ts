@@ -135,6 +135,7 @@ export async function GET(req: NextRequest) {
       },
       invoiceUrl: invoiceData.invoice_url,
       receiptUrl: invoiceData.receipt_url,
+      certificateUrl: invoiceData.certificate_url,
     }
 
     // Debug: Log the final response data

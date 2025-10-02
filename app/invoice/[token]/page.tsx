@@ -150,6 +150,7 @@ async function getInvoice(token: string, retryCount = 0): Promise<InvoicePayload
     },
     invoiceUrl: invoiceData.invoice_url,
     receiptUrl: invoiceData.receipt_url,
+    certificateUrl: invoiceData.certificate_url,
   };
 
     return invoice;
